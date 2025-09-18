@@ -1,0 +1,2901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmTrade Connect - Admin Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- DataTables for advanced tables (Optional, can be replaced by custom pagination/search) -->
+    <!-- For this extensive example, I'll use custom pagination/search to show more JS logic -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css"> -->
+    <!-- <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script> -->
+    <!-- Select2 for advanced dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Flatpickr for date selection -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Export libs -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #4a7fc0;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --sidebar-width: 250px;
+            --header-height: 70px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7f9;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100%;
+            background: var(--primary-color);
+            color: white;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .sidebar-menu {
+            padding: 0;
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-menu a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            display: block;
+            padding: 12px 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu .active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left: 4px solid white;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Dashboard Cards */
+        .dashboard-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .dashboard-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+        
+        /* Stats Cards */
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .stat-card .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Table Styling */
+        .table th {
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+        
+        .badge-status {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        /* Tabs */
+        .nav-tabs .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #6c757d;
+            padding: 10px 15px;
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            border-bottom: 3px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+        }
+        
+        /* Modal Styling */
+        .modal-content {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Form Styling */
+        .form-control, .form-select {
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar .menu-text {
+                display: none;
+            }
+            
+            .sidebar-header h3 {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar.active {
+                width: var(--sidebar-width);
+            }
+            
+            .sidebar.active .menu-text {
+                display: inline;
+            }
+        }
+        
+        /* Custom utilities */
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        .rounded-lg {
+            border-radius: 10px;
+        }
+        
+        .shadow-sm {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* Custom styles for advanced features */
+        .data-table-container {
+            max-height: 600px; /* Adjust as needed */
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .data-table-container table {
+            margin-bottom: 0;
+        }
+        .data-table-container thead th {
+            position: sticky;
+            top: 0;
+            background-color: var(--light-color);
+            z-index: 1;
+        }
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .document-link {
+            color: var(--primary-color);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .document-link:hover {
+            color: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>FarmTrade Admin</h3>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active"><a href="#dashboard"><i class="fas fa-tachometer-alt"></i> <span class="menu-text">Dashboard</span></a></li>
+            <li><a href="#user-management"><i class="fas fa-users"></i> <span class="menu-text">User Management</span></a></li>
+            <li><a href="#order-management"><i class="fas fa-shopping-cart"></i> <span class="menu-text">Orders</span></a></li>
+            <li><a href="#dispute-management"><i class="fas fa-exclamation-circle"></i> <span class="menu-text">Disputes</span> <span class="notification-badge" id="dispute-badge">3</span></a></li>
+            <li><a href="#analytics"><i class="fas fa-chart-line"></i> <span class="menu-text">Analytics</span></a></li>
+            <li><a href="#finance"><i class="fas fa-dollar-sign"></i> <span class="menu-text">Finance</span></a></li>
+            <li><a href="#content-management"><i class="fas fa-file-alt"></i> <span class="menu-text">Content</span></a></li>
+            <li><a href="#system-health"><i class="fas fa-heartbeat"></i> <span class="menu-text">System Health</span></a></li>
+            <li><a href="#api-management"><i class="fas fa-code"></i> <span class="menu-text">API Management</span></a></li>
+            <li><a href="#audit-trail"><i class="fas fa-history"></i> <span class="menu-text">Audit Trail</span></a></li>
+            <li><a href="#settings"><i class="fas fa-cogs"></i> <span class="menu-text">Settings</span></a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <button class="btn btn-sm btn-light me-2 d-md-none" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h4 class="mb-0">Admin Dashboard</h4>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3">
+                    <button class="btn btn-light dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-globe"></i> English
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">English</a></li>
+                        <li><a class="dropdown-item" href="#">Spanish</a></li>
+                        <li><a class="dropdown-item" href="#">French</a></li>
+                    </ul>
+                </div>
+                <div class="dropdown me-3">
+                    <button class="btn btn-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notification-count">5</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3" style="width: 300px;">
+                        <h6 class="dropdown-header">Notifications</h6>
+                        <div id="notification-list">
+                            <div class="dropdown-item">
+                                <small class="text-muted">10 mins ago</small>
+                                <p class="mb-0">New user registration awaiting approval</p>
+                            </div>
+                            <div class="dropdown-item">
+                                <small class="text-muted">30 mins ago</small>
+                                <p class="mb-0">New order #1234 placed</p>
+                            </div>
+                            <div class="dropdown-item">
+                                <small class="text-muted">1 hour ago</small>
+                                <p class="mb-0">New dispute reported</p>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item text-center" onclick="viewAllNotifications()">View all notifications</a>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i> <span id="admin-username">Admin User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="showProfileSettings()"><i class="fas fa-user me-2"></i> Profile</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showGeneralSettings()"><i class="fas fa-cog me-2"></i> Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" class="content-section">
+            <h2 class="mb-4">Dashboard Overview</h2>
+            <!-- Stats Overview -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card text-primary">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-number" id="total-users">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-success">
+                        <i class="fas fa-shopping-cart"></i>
+                        <div class="stat-number" id="total-orders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="stat-number" id="pending-disputes">0</div>
+                        <div class="stat-label">Pending Disputes</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-info">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div class="stat-number" id="total-revenue">$0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="dashboard-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Platform Activity</span>
+                            <div>
+                                <select class="form-select form-select-sm" style="width: 150px;" id="activity-chart-filter">
+                                    <option value="7">Last 7 Days</option>
+                                    <option value="30">Last 30 Days</option>
+                                    <option value="90">Last 90 Days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="activityChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            User Distribution
+                        </div>
+                        <div class="card-body">
+                            <canvas id="userDistributionChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="dashboard-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Recent Activity Log</span>
+                            <a href="#" class="btn btn-sm btn-link" onclick="showSection('audit-trail')">View All</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush" id="recent-activity-list">
+                                <!-- Activity items will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Content -->
+        <div id="user-management-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">User Management</h2>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="user-search" placeholder="Search users...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="user-role-filter">
+                        <option value="">All Roles</option>
+                        <option value="farmer">Farmer</option>
+                        <option value="trader">Trader</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="user-status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-primary" onclick="openAddUserModal()">Add User</button>
+                </div>
+            </div>
+            <div class="data-table-container dashboard-card p-3">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Join Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <!-- User data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-controls">
+                <button class="btn btn-sm btn-outline-secondary" id="user-prev-page"><i class="fas fa-chevron-left"></i></button>
+                <span id="user-page-info">Page 1 of 1</span>
+                <button class="btn btn-sm btn-outline-secondary" id="user-next-page"><i class="fas fa-chevron-right"></i></button>
+                <select class="form-select form-select-sm w-auto" id="user-rows-per-page">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Order Management Content -->
+        <div id="order-management-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">Order Management</h2>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="order-search" placeholder="Search orders...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="order-status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control datepicker" id="order-date-filter" placeholder="Filter by date range">
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-primary" onclick="openAddOrderModal()">Add Order</button>
+                </div>
+            </div>
+            <div class="data-table-container dashboard-card p-3">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Crop</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Buyer</th>
+                            <th>Seller</th>
+                            <th>Status</th>
+                            <th>Order Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-table-body">
+                        <!-- Order data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-controls">
+                <button class="btn btn-sm btn-outline-secondary" id="order-prev-page"><i class="fas fa-chevron-left"></i></button>
+                <span id="order-page-info">Page 1 of 1</span>
+                <button class="btn btn-sm btn-outline-secondary" id="order-next-page"><i class="fas fa-chevron-right"></i></button>
+                <select class="form-select form-select-sm w-auto" id="order-rows-per-page">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Dispute Management Content -->
+        <div id="dispute-management-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">Dispute Management</h2>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="dispute-search" placeholder="Search disputes...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="dispute-status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="in-review">In Review</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="dispute-priority-filter">
+                        <option value="">All Priorities</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-primary" onclick="openAddDisputeModal()">Add Dispute</button>
+                </div>
+            </div>
+            <div class="data-table-container dashboard-card p-3">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Dispute ID</th>
+                            <th>Order ID</th>
+                            <th>Reported By</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Report Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dispute-table-body">
+                        <!-- Dispute data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-controls">
+                <button class="btn btn-sm btn-outline-secondary" id="dispute-prev-page"><i class="fas fa-chevron-left"></i></button>
+                <span id="dispute-page-info">Page 1 of 1</span>
+                <button class="btn btn-sm btn-outline-secondary" id="dispute-next-page"><i class="fas fa-chevron-right"></i></button>
+                <select class="form-select form-select-sm w-auto" id="dispute-rows-per-page">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Analytics Content -->
+        <div id="analytics-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">Platform Analytics</h2>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">User Registration Trends</div>
+                        <div class="card-body"><canvas id="analytics-user-reg-chart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">Order Volume Trends</div>
+                        <div class="card-body"><canvas id="analytics-order-volume-chart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">Top Crops Traded</div>
+                        <div class="card-body"><canvas id="analytics-top-crops-chart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">Revenue by Month</div>
+                        <div class="card-body"><canvas id="analytics-revenue-chart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finance Content -->
+        <div id="finance-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">Financial Overview</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">Revenue & Expenses</div>
+                        <div class="card-body"><canvas id="finance-revenue-expense-chart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">Payment Gateway Performance</div>
+                        <div class="card-body">
+                            <p><strong>Total Transactions:</strong> <span id="finance-total-transactions">0</span></p>
+                            <p><strong>Successful Transactions:</strong> <span id="finance-successful-transactions">0</span></p>
+                            <p><strong>Failed Transactions:</strong> <span id="finance-failed-transactions">0</span></p>
+                            <canvas id="finance-payment-status-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-card mt-4">
+                <div class="card-header">Commission & Payouts</div>
+                <div class="card-body">
+                    <p><strong>Total Commissions Earned:</strong> <span id="finance-commissions-earned">$0</span></p>
+                    <p><strong>Total Payouts to Farmers/Traders:</strong> <span id="finance-payouts-made">$0</span></p>
+                    <button class="btn btn-info" onclick="generateFinancialReport()">Generate Detailed Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Management Content -->
+        <div id="content-management-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">Content Management</h2>
+            <ul class="nav nav-tabs mb-3" id="content-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="faq-tab" data-bs-toggle="tab" data-bs-target="#faq-pane" type="button" role="tab" aria-controls="faq-pane" aria-selected="true">FAQs</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="announcements-tab" data-bs-toggle="tab" data-bs-target="#announcements-pane" type="button" role="tab" aria-controls="announcements-pane" aria-selected="false">Announcements</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="policies-tab" data-bs-toggle="tab" data-bs-target="#policies-pane" type="button" role="tab" aria-controls="policies-pane" aria-selected="false">Policies</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="content-tab-content">
+                <div class="tab-pane fade show active" id="faq-pane" role="tabpanel" aria-labelledby="faq-tab">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-primary" onclick="openAddFAQModal()">Add New FAQ</button>
+                    </div>
+                    <div class="data-table-container dashboard-card p-3">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Question</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="faq-table-body">
+                                <!-- FAQ data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="announcements-pane" role="tabpanel" aria-labelledby="announcements-tab">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-primary" onclick="openAddAnnouncementModal()">Add New Announcement</button>
+                    </div>
+                    <div class="data-table-container dashboard-card p-3">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Publish Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="announcement-table-body">
+                                <!-- Announcement data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="policies-pane" role="tabpanel" aria-labelledby="policies-tab">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-primary" onclick="openAddPolicyModal()">Add New Policy</button>
+                    </div>
+                    <div class="data-table-container dashboard-card p-3">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="policy-table-body">
+                                <!-- Policy data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health Content -->
+        <div id="system-health-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">System Health & Monitoring</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">Server Status</div>
+                        <div class="card-body">
+                            <p><strong>API Server:</strong> <span class="badge bg-success" id="api-server-status">Online</span></p>
+                            <p><strong>Database Server:</strong> <span class="badge bg-success" id="db-server-status">Online</span></p>
+                            <p><strong>File Storage:</strong> <span class="badge bg-warning" id="file-storage-status">74% Used</span></p>
+                            <p><strong>Last Backup:</strong> <span id="last-backup-time">2023-10-26 02:00 AM</span></p>
+                            <button class="btn btn-info btn-sm" onclick="runSystemCheck()">Run System Check</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">API Response Times (ms)</div>
+                        <div class="card-body"><canvas id="api-response-chart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-card mt-4">
+                <div class="card-header">Recent System Alerts</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush" id="system-alerts-list">
+                        <li class="list-group-item text-warning"><i class="fas fa-exclamation-triangle me-2"></i>High CPU usage detected on DB server (2023-10-25 10:30 AM)</li>
+                        <li class="list-group-item text-danger"><i class="fas fa-times-circle me-2"></i>Payment Gateway API unresponsive (2023-10-24 03:15 PM)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Management Content -->
+        <div id="api-management-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">API Management</h2>
+            <div class="dashboard-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>API Keys</span>
+                    <button class="btn btn-primary btn-sm" onclick="generateNewApiKey()">Generate New Key</button>
+                </div>
+                <div class="card-body">
+                    <div class="data-table-container p-3">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Key ID</th>
+                                    <th>Key (Partial)</th>
+                                    <th>Associated User/Service</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="api-keys-table-body">
+                                <!-- API keys will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-card mt-4">
+                <div class="card-header">API Usage Analytics</div>
+                <div class="card-body"><canvas id="api-usage-chart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Audit Trail Content -->
+        <div id="audit-trail-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">Audit Trail</h2>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="audit-search" placeholder="Search audit logs...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="audit-user-filter">
+                        <option value="">All Users</option>
+                        <!-- Dynamic user list -->
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="audit-action-filter">
+                        <option value="">All Actions</option>
+                        <option value="login">Login</option>
+                        <option value="user_update">User Update</option>
+                        <option value="order_status_change">Order Status Change</option>
+                        <option value="document_access">Document Access</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-outline-primary" onclick="exportAuditLog()">Export Log</button>
+                </div>
+            </div>
+            <div class="data-table-container dashboard-card p-3">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-table-body">
+                        <!-- Audit log data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-controls">
+                <button class="btn btn-sm btn-outline-secondary" id="audit-prev-page"><i class="fas fa-chevron-left"></i></button>
+                <span id="audit-page-info">Page 1 of 1</span>
+                <button class="btn btn-sm btn-outline-secondary" id="audit-next-page"><i class="fas fa-chevron-right"></i></button>
+                <select class="form-select form-select-sm w-auto" id="audit-rows-per-page">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div id="settings-content" class="content-section" style="display: none;">
+            <h2 class="mb-4">Settings</h2>
+            <ul class="nav nav-tabs mb-3" id="settings-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="general-settings-tab" data-bs-toggle="tab" data-bs-target="#general-settings-pane" type="button" role="tab" aria-controls="general-settings-pane" aria-selected="true">General</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-settings-tab" data-bs-toggle="tab" data-bs-target="#profile-settings-pane" type="button" role="tab" aria-controls="profile-settings-pane" aria-selected="false">Profile</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="rbac-settings-tab" data-bs-toggle="tab" data-bs-target="#rbac-settings-pane" type="button" role="tab" aria-controls="rbac-settings-pane" aria-selected="false">Roles & Permissions</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="settings-tab-content">
+                <div class="tab-pane fade show active" id="general-settings-pane" role="tabpanel" aria-labelledby="general-settings-tab">
+                    <div class="dashboard-card p-3">
+                        <h5>General Platform Settings</h5>
+                        <div class="mb-3">
+                            <label for="platform-name" class="form-label">Platform Name</label>
+                            <input type="text" class="form-control" id="platform-name" value="FarmTrade Connect">
+                        </div>
+                        <div class="mb-3">
+                            <label for="default-commission" class="form-label">Default Commission Rate (%)</label>
+                            <input type="number" class="form-control" id="default-commission" value="2.5" step="0.1">
+                        </div>
+                        <button class="btn btn-success" onclick="saveGeneralSettings()">Save General Settings</button>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="profile-settings-pane" role="tabpanel" aria-labelledby="profile-settings-tab">
+                    <div class="dashboard-card p-3">
+                        <h5>Admin Profile Settings</h5>
+                        <div class="mb-3">
+                            <label for="admin-profile-name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="admin-profile-name" value="Super Admin">
+                        </div>
+                        <div class="mb-3">
+                            <label for="admin-profile-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="admin-profile-email" value="admin@farmtrade.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="admin-profile-password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="admin-profile-password" placeholder="Leave blank to keep current">
+                        </div>
+                        <button class="btn btn-success" onclick="saveAdminProfile()">Save Profile</button>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="rbac-settings-pane" role="tabpanel" aria-labelledby="rbac-settings-tab">
+                    <div class="dashboard-card p-3">
+                        <h5>Role-Based Access Control</h5>
+                        <p class="text-muted">Define and manage roles and their permissions.</p>
+                        <div class="data-table-container p-3 mb-3">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Role Name</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rbac-table-body">
+                                    <!-- Roles will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-primary" onclick="openAddRoleModal()">Add New Role</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+
+        <!-- User Details Modal -->
+        <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="user-details-modal-body">
+                        <!-- User details will be loaded here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="edit-user-btn">Edit User</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit/Add User Modal -->
+        <div class="modal fade" id="editAddUserModal" tabindex="-1" aria-labelledby="editAddUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editAddUserModalLabel">Add/Edit User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="user-form">
+                            <input type="hidden" id="user-form-id">
+                            <div class="mb-3">
+                                <label for="user-form-name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="user-form-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="user-form-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-mobile" class="form-label">Mobile</label>
+                                <input type="text" class="form-control" id="user-form-mobile">
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-role" class="form-label">Role</label>
+                                <select class="form-select" id="user-form-role" required>
+                                    <option value="farmer">Farmer</option>
+                                    <option value="trader">Trader</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-status" class="form-label">Status</label>
+                                <select class="form-select" id="user-form-status" required>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="suspended">Suspended</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-address" class="form-label">Address</label>
+                                <textarea class="form-control" id="user-form-address" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-primary-crop" class="form-label">Primary Crop (Farmer)</label>
+                                <input type="text" class="form-control" id="user-form-primary-crop">
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-business-name" class="form-label">Business Name (Trader)</label>
+                                <input type="text" class="form-control" id="user-form-business-name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-land-proof" class="form-label">Land/ID Proof (Farmer)</label>
+                                <input type="file" class="form-control" id="user-form-land-proof">
+                                <small class="text-muted" id="user-form-land-proof-current"></small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="user-form-business-proof" class="form-label">Business/ID Proof (Trader)</label>
+                                <input type="file" class="form-control" id="user-form-business-proof">
+                                <small class="text-muted" id="user-form-business-proof-current"></small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save User</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Details Modal -->
+        <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="order-details-modal-body">
+                        <!-- Order details will be loaded here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="edit-order-btn">Edit Order</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit/Add Order Modal -->
+        <div class="modal fade" id="editAddOrderModal" tabindex="-1" aria-labelledby="editAddOrderModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editAddOrderModalLabel">Add/Edit Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="order-form">
+                            <input type="hidden" id="order-form-id">
+                            <div class="mb-3">
+                                <label for="order-form-crop" class="form-label">Crop</label>
+                                <input type="text" class="form-control" id="order-form-crop" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="order-form-quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="order-form-quantity" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="order-form-price" class="form-label">Price</label>
+                                <input type="number" class="form-control" id="order-form-price" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="order-form-buyer" class="form-label">Buyer (User ID)</label>
+                                <input type="text" class="form-control" id="order-form-buyer" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="order-form-seller" class="form-label">Seller (User ID)</label>
+                                <input type="text" class="form-control" id="order-form-seller" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="order-form-status" class="form-label">Status</label>
+                                <select class="form-select" id="order-form-status" required>
+                                    <option value="pending">Pending</option>
+                                    <option value="accepted">Accepted</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="order-form-date" class="form-label">Order Date</label>
+                                <input type="text" class="form-control datepicker" id="order-form-date" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Order</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dispute Details Modal -->
+        <div class="modal fade" id="disputeDetailsModal" tabindex="-1" aria-labelledby="disputeDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="disputeDetailsModalLabel">Dispute Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="dispute-details-modal-body">
+                        <!-- Dispute details will be loaded here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="edit-dispute-btn">Edit Dispute</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit/Add Dispute Modal -->
+        <div class="modal fade" id="editAddDisputeModal" tabindex="-1" aria-labelledby="editAddDisputeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editAddDisputeModalLabel">Add/Edit Dispute</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="dispute-form">
+                            <input type="hidden" id="dispute-form-id">
+                            <div class="mb-3">
+                                <label for="dispute-form-order-id" class="form-label">Order ID</label>
+                                <input type="text" class="form-control" id="dispute-form-order-id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dispute-form-reported-by" class="form-label">Reported By (User ID)</label>
+                                <input type="text" class="form-control" id="dispute-form-reported-by" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dispute-form-reason" class="form-label">Reason</label>
+                                <textarea class="form-control" id="dispute-form-reason" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dispute-form-status" class="form-label">Status</label>
+                                <select class="form-select" id="dispute-form-status" required>
+                                    <option value="open">Open</option>
+                                    <option value="in-review">In Review</option>
+                                    <option value="resolved">Resolved</option>
+                                    <option value="closed">Closed</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dispute-form-priority" class="form-label">Priority</label>
+                                <select class="form-select" id="dispute-form-priority" required>
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dispute-form-report-date" class="form-label">Report Date</label>
+                                <input type="text" class="form-control datepicker" id="dispute-form-report-date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dispute-form-resolution-notes" class="form-label">Resolution Notes</label>
+                                <textarea class="form-control" id="dispute-form-resolution-notes" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Dispute</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit FAQ Modal -->
+        <div class="modal fade" id="editAddFAQModal" tabindex="-1" aria-labelledby="editAddFAQModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editAddFAQModalLabel">Add/Edit FAQ</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="faq-form">
+                            <input type="hidden" id="faq-form-id">
+                            <div class="mb-3">
+                                <label for="faq-form-question" class="form-label">Question</label>
+                                <input type="text" class="form-control" id="faq-form-question" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="faq-form-answer" class="form-label">Answer</label>
+                                <textarea class="form-control" id="faq-form-answer" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save FAQ</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Announcement Modal -->
+        <div class="modal fade" id="editAddAnnouncementModal" tabindex="-1" aria-labelledby="editAddAnnouncementModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editAddAnnouncementModalLabel">Add/Edit Announcement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="announcement-form">
+                            <input type="hidden" id="announcement-form-id">
+                            <div class="mb-3">
+                                <label for="announcement-form-title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="announcement-form-title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="announcement-form-content" class="form-label">Content</label>
+                                <textarea class="form-control" id="announcement-form-content" rows="5" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="announcement-form-publish-date" class="form-label">Publish Date</label>
+                                <input type="text" class="form-control datepicker" id="announcement-form-publish-date" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Announcement</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Policy Modal -->
+        <div class="modal fade" id="editAddPolicyModal" tabindex="-1" aria-labelledby="editAddPolicyModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editAddPolicyModalLabel">Add/Edit Policy</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="policy-form">
+                            <input type="hidden" id="policy-form-id">
+                            <div class="mb-3">
+                                <label for="policy-form-title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="policy-form-title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="policy-form-content" class="form-label">Content</label>
+                                <textarea class="form-control" id="policy-form-content" rows="5" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="policy-form-last-updated" class="form-label">Last Updated Date</label>
+                                <input type="text" class="form-control datepicker" id="policy-form-last-updated" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Policy</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Role Modal -->
+        <div class="modal fade" id="editAddRoleModal" tabindex="-1" aria-labelledby="editAddRoleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editAddRoleModalLabel">Add/Edit Role</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="role-form">
+                            <input type="hidden" id="role-form-id">
+                            <div class="mb-3">
+                                <label for="role-form-name" class="form-label">Role Name</label>
+                                <input type="text" class="form-control" id="role-form-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="role-form-description" class="form-label">Description</label>
+                                <textarea class="form-control" id="role-form-description" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Permissions</label>
+                                <div id="role-form-permissions" class="row">
+                                    <!-- Permissions checkboxes will be loaded here -->
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Role</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global Data Storage (Simulated Backend)
+        let users = JSON.parse(localStorage.getItem('admin_users')) || [];
+        let orders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+        let disputes = JSON.parse(localStorage.getItem('admin_disputes')) || [];
+        let faqs = JSON.parse(localStorage.getItem('admin_faqs')) || [];
+        let announcements = JSON.parse(localStorage.getItem('admin_announcements')) || [];
+        let policies = JSON.parse(localStorage.getItem('admin_policies')) || [];
+        let apiKeys = JSON.parse(localStorage.getItem('admin_api_keys')) || [];
+        let auditLog = JSON.parse(localStorage.getItem('admin_audit_log')) || [];
+        let roles = JSON.parse(localStorage.getItem('admin_roles')) || [
+            { id: 'r1', name: 'Super Admin', description: 'Full access to all features', permissions: ['all'] },
+            { id: 'r2', name: 'Moderator', description: 'Manage users and disputes', permissions: ['user_manage', 'dispute_manage'] },
+            { id: 'r3', name: 'Finance Manager', description: 'View finance and orders', permissions: ['finance_view', 'order_view'] }
+        ];
+        let currentUserRole = 'Super Admin'; // Simulated current admin user's role
+
+        // Pagination State
+        const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
+        let userCurrentPage = 1;
+        let userRowsPerPage = 10;
+        let orderCurrentPage = 1;
+        let orderRowsPerPage = 10;
+        let disputeCurrentPage = 1;
+        let disputeRowsPerPage = 10;
+        let auditCurrentPage = 1;
+        let auditRowsPerPage = 10;
+
+        // Modals
+        const userDetailsModal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+        const editAddUserModal = new bootstrap.Modal(document.getElementById('editAddUserModal'));
+        const orderDetailsModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+        const editAddOrderModal = new bootstrap.Modal(document.getElementById('editAddOrderModal'));
+        const disputeDetailsModal = new bootstrap.Modal(document.getElementById('disputeDetailsModal'));
+        const editAddDisputeModal = new bootstrap.Modal(document.getElementById('editAddDisputeModal'));
+        const editAddFAQModal = new bootstrap.Modal(document.getElementById('editAddFAQModal'));
+        const editAddAnnouncementModal = new bootstrap.Modal(document.getElementById('editAddAnnouncementModal'));
+        const editAddPolicyModal = new bootstrap.Modal(document.getElementById('editAddPolicyModal'));
+        const editAddRoleModal = new bootstrap.Modal(document.getElementById('editAddRoleModal'));
+
+        // Charts Instances
+        let activityChartInstance, userDistributionChartInstance;
+        let analyticsUserRegChartInstance, analyticsOrderVolumeChartInstance, analyticsTopCropsChartInstance, analyticsRevenueChartInstance;
+        let financeRevenueExpenseChartInstance, financePaymentStatusChartInstance;
+        let apiUsageChartInstance;
+
+        // --- Utility Functions ---
+
+        function generateUniqueId() {
+            return '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function saveToLocalStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+            // In a real app, this would be a fetch('/api/save', { method: 'POST', body: JSON.stringify({ key, data }) })
+        }
+
+        function loadFromLocalStorage(key) {
+            // In a real app, this would be a fetch('/api/load?key=' + key)
+            return JSON.parse(localStorage.getItem(key));
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function formatDateTime(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function showToast(message, type = 'success') {
+            // Implement a Bootstrap Toast or similar notification
+            console.log(`Toast (${type}): ${message}`);
+            // Example: new bootstrap.Toast(document.getElementById('myToast'), { delay: 2000 }).show();
+        }
+
+        function updateNotificationCount() {
+            const count = parseInt(document.getElementById('notification-count').textContent);
+            document.getElementById('notification-count').textContent = count + 1;
+            document.getElementById('dispute-badge').textContent = parseInt(document.getElementById('dispute-badge').textContent) + 1;
+        }
+
+        function hasPermission(permission) {
+            const role = roles.find(r => r.name === currentUserRole);
+            if (!role) return false;
+            if (role.permissions.includes('all')) return true;
+            return role.permissions.includes(permission);
+        }
+
+        function checkAndApplyPermissions() {
+            // Example: Hide/show elements based on permissions
+            // document.querySelectorAll('.requires-finance-view').forEach(el => {
+            //     if (!hasPermission('finance_view')) el.style.display = 'none';
+            // });
+            // This would be more robust with a dedicated RBAC library or backend integration
+        }
+
+        // --- Core Data Management (Simulated API Calls) ---
+
+        // Users
+        async function fetchUsers() {
+            // const response = await fetch('/api/users');
+            // users = await response.json();
+            users = loadFromLocalStorage('admin_users') || [];
+            if (users.length === 0) { // Seed initial data if empty
+                users = [
+                    { id: 'u1', name: 'John Doe', email: 'john.doe@example.com', mobile: '9876543210', role: 'farmer', status: 'approved', joinDate: '2023-01-15', address: 'Village A, District B, State C', primaryCrop: 'Wheat', landProof: 'https://example.com/land_proof_john.pdf' },
+                    { id: 'u2', name: 'Jane Smith', email: 'jane.smith@example.com', mobile: '9876543211', role: 'trader', status: 'pending', joinDate: '2023-02-20', address: 'City X, State Y', businessName: 'AgriTrade Co.', businessProof: 'https://example.com/biz_proof_jane.png' },
+                    { id: 'u3', name: 'Robert Johnson', email: 'robert.j@example.com', mobile: '9876543212', role: 'farmer', status: 'rejected', joinDate: '2023-03-01', address: 'Village D, District E, State F', primaryCrop: 'Rice', landProof: 'https://example.com/land_proof_robert.jpg' },
+                    { id: 'u4', name: 'Admin User', email: 'admin@farmtrade.com', mobile: '9876543213', role: 'admin', status: 'approved', joinDate: '2022-01-01' }
+                ];
+                saveToLocalStorage('admin_users', users);
+            }
+            renderUserTable();
+            updateDashboardStats();
+            updateAnalyticsCharts();
+            updateAuditUserFilter();
+        }
+
+        async function saveUser(user) {
+            if (user.id) {
+                // const response = await fetch(`/api/users/${user.id}`, { method: 'PUT', body: JSON.stringify(user) });
+                const index = users.findIndex(u => u.id === user.id);
+                if (index !== -1) users[index] = user;
+                logActivity(`Updated user: ${user.name} (${user.id})`);
+                showToast('User updated successfully!');
+            } else {
+                // const response = await fetch('/api/users', { method: 'POST', body: JSON.stringify(user) });
+                user.id = generateUniqueId();
+                user.joinDate = new Date().toISOString();
+                users.push(user);
+                logActivity(`Added new user: ${user.name} (${user.id})`);
+                showToast('User added successfully!');
+            }
+            saveToLocalStorage('admin_users', users);
+            renderUserTable();
+            updateDashboardStats();
+            updateAnalyticsCharts();
+        }
+
+        async function deleteUser(id) {
+            // const response = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+            const user = users.find(u => u.id === id);
+            users = users.filter(u => u.id !== id);
+            saveToLocalStorage('admin_users', users);
+            logActivity(`Deleted user: ${user.name} (${user.id})`);
+            showToast('User deleted successfully!', 'danger');
+            renderUserTable();
+            updateDashboardStats();
+            updateAnalyticsCharts();
+        }
+
+        // Orders
+        async function fetchOrders() {
+            // const response = await fetch('/api/orders');
+            // orders = await response.json();
+            orders = loadFromLocalStorage('admin_orders') || [];
+            if (orders.length === 0) { // Seed initial data if empty
+                orders = [
+                    { id: 'ORD001', crop: 'Wheat', quantity: 1000, price: 250, buyer: 'u2', seller: 'u1', status: 'completed', orderDate: '2023-09-01' },
+                    { id: 'ORD002', crop: 'Rice', quantity: 500, price: 375, buyer: 'u2', seller: 'u3', status: 'pending', orderDate: '2023-09-05' },
+                    { id: 'ORD003', crop: 'Corn', quantity: 2000, price: 180, buyer: 'u4', seller: 'u1', status: 'shipped', orderDate: '2023-09-10' }
+                ];
+                saveToLocalStorage('admin_orders', orders);
+            }
+            renderOrderTable();
+            updateDashboardStats();
+            updateAnalyticsCharts();
+        }
+
+        async function saveOrder(order) {
+            if (order.id) {
+                // const response = await fetch(`/api/orders/${order.id}`, { method: 'PUT', body: JSON.stringify(order) });
+                const index = orders.findIndex(o => o.id === order.id);
+                if (index !== -1) orders[index] = order;
+                logActivity(`Updated order: ${order.id}`);
+                showToast('Order updated successfully!');
+            } else {
+                // const response = await fetch('/api/orders', { method: 'POST', body: JSON.stringify(order) });
+                order.id = 'ORD' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                order.orderDate = new Date().toISOString();
+                orders.push(order);
+                logActivity(`Added new order: ${order.id}`);
+                showToast('Order added successfully!');
+            }
+            saveToLocalStorage('admin_orders', orders);
+            renderOrderTable();
+            updateDashboardStats();
+            updateAnalyticsCharts();
+        }
+
+        async function deleteOrder(id) {
+            // const response = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+            orders = orders.filter(o => o.id !== id);
+            saveToLocalStorage('admin_orders', orders);
+            logActivity(`Deleted order: ${id}`);
+            showToast('Order deleted successfully!', 'danger');
+            renderOrderTable();
+            updateDashboardStats();
+            updateAnalyticsCharts();
+        }
+
+        // Disputes
+        async function fetchDisputes() {
+            // const response = await fetch('/api/disputes');
+            // disputes = await response.json();
+            disputes = loadFromLocalStorage('admin_disputes') || [];
+            if (disputes.length === 0) { // Seed initial data if empty
+                disputes = [
+                    { id: 'DISP001', orderId: 'ORD002', reportedBy: 'u2', reason: 'Crop quality not as described', status: 'open', priority: 'high', reportDate: '2023-09-06', resolutionNotes: '' },
+                    { id: 'DISP002', orderId: 'ORD001', reportedBy: 'u1', reason: 'Payment delay', status: 'in-review', priority: 'medium', reportDate: '2023-09-02', resolutionNotes: 'Contacted buyer for clarification.' }
+                ];
+                saveToLocalStorage('admin_disputes', disputes);
+            }
+            renderDisputeTable();
+            updateDashboardStats();
+        }
+
+        async function saveDispute(dispute) {
+            if (dispute.id) {
+                // const response = await fetch(`/api/disputes/${dispute.id}`, { method: 'PUT', body: JSON.stringify(dispute) });
+                const index = disputes.findIndex(d => d.id === dispute.id);
+                if (index !== -1) disputes[index] = dispute;
+                logActivity(`Updated dispute: ${dispute.id}`);
+                showToast('Dispute updated successfully!');
+            } else {
+                // const response = await fetch('/api/disputes', { method: 'POST', body: JSON.stringify(dispute) });
+                dispute.id = 'DISP' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                dispute.reportDate = new Date().toISOString();
+                disputes.push(dispute);
+                logActivity(`Added new dispute: ${dispute.id}`);
+                showToast('Dispute added successfully!');
+            }
+            saveToLocalStorage('admin_disputes', disputes);
+            renderDisputeTable();
+            updateDashboardStats();
+        }
+
+        async function deleteDispute(id) {
+            // const response = await fetch(`/api/disputes/${id}`, { method: 'DELETE' });
+            disputes = disputes.filter(d => d.id !== id);
+            saveToLocalStorage('admin_disputes', disputes);
+            logActivity(`Deleted dispute: ${id}`);
+            showToast('Dispute deleted successfully!', 'danger');
+            renderDisputeTable();
+            updateDashboardStats();
+        }
+
+        // Content Management
+        async function fetchFAQs() {
+            faqs = loadFromLocalStorage('admin_faqs') || [
+                { id: 'faq1', question: 'How do I register as a farmer?', answer: 'You can register by filling out the form on the registration page and providing your land details.' },
+                { id: 'faq2', question: 'What crops can I trade?', answer: 'You can trade a variety of crops including wheat, rice, corn, and vegetables.' }
+            ];
+            saveToLocalStorage('admin_faqs', faqs);
+            renderFAQTable();
+        }
+
+        async function saveFAQ(faq) {
+            if (faq.id) {
+                const index = faqs.findIndex(f => f.id === faq.id);
+                if (index !== -1) faqs[index] = faq;
+                logActivity(`Updated FAQ: ${faq.id}`);
+                showToast('FAQ updated successfully!');
+            } else {
+                faq.id = generateUniqueId();
+                faqs.push(faq);
+                logActivity(`Added new FAQ: ${faq.id}`);
+                showToast('FAQ added successfully!');
+            }
+            saveToLocalStorage('admin_faqs', faqs);
+            renderFAQTable();
+        }
+
+        async function deleteFAQ(id) {
+            faqs = faqs.filter(f => f.id !== id);
+            saveToLocalStorage('admin_faqs', faqs);
+            logActivity(`Deleted FAQ: ${id}`);
+            showToast('FAQ deleted successfully!', 'danger');
+            renderFAQTable();
+        }
+
+        async function fetchAnnouncements() {
+            announcements = loadFromLocalStorage('admin_announcements') || [
+                { id: 'ann1', title: 'Platform Maintenance', content: 'Scheduled maintenance on 2023-11-01 from 2 AM to 4 AM IST.', publishDate: '2023-10-28' },
+                { id: 'ann2', title: 'New Feature: Live Chat', content: 'We are excited to announce live chat support for all users!', publishDate: '2023-10-25' }
+            ];
+            saveToLocalStorage('admin_announcements', announcements);
+            renderAnnouncementTable();
+        }
+
+        async function saveAnnouncement(announcement) {
+            if (announcement.id) {
+                const index = announcements.findIndex(a => a.id === announcement.id);
+                if (index !== -1) announcements[index] = announcement;
+                logActivity(`Updated announcement: ${announcement.id}`);
+                showToast('Announcement updated successfully!');
+            } else {
+                announcement.id = generateUniqueId();
+                announcements.push(announcement);
+                logActivity(`Added new announcement: ${announcement.id}`);
+                showToast('Announcement added successfully!');
+            }
+            saveToLocalStorage('admin_announcements', announcements);
+            renderAnnouncementTable();
+        }
+
+        async function deleteAnnouncement(id) {
+            announcements = announcements.filter(a => a.id !== id);
+            saveToLocalStorage('admin_announcements', announcements);
+            logActivity(`Deleted announcement: ${id}`);
+            showToast('Announcement deleted successfully!', 'danger');
+            renderAnnouncementTable();
+        }
+
+        async function fetchPolicies() {
+            policies = loadFromLocalStorage('admin_policies') || [
+                { id: 'pol1', title: 'Terms of Service', content: 'Our updated terms of service...', lastUpdated: '2023-09-01' },
+                { id: 'pol2', title: 'Privacy Policy', content: 'Our privacy policy outlines...', lastUpdated: '2023-08-15' }
+            ];
+            saveToLocalStorage('admin_policies', policies);
+            renderPolicyTable();
+        }
+
+        async function savePolicy(policy) {
+            if (policy.id) {
+                const index = policies.findIndex(p => p.id === policy.id);
+                if (index !== -1) policies[index] = policy;
+                logActivity(`Updated policy: ${policy.id}`);
+                showToast('Policy updated successfully!');
+            } else {
+                policy.id = generateUniqueId();
+                policies.push(policy);
+                logActivity(`Added new policy: ${policy.id}`);
+                showToast('Policy added successfully!');
+            }
+            saveToLocalStorage('admin_policies', policies);
+            renderPolicyTable();
+        }
+
+        async function deletePolicy(id) {
+            policies = policies.filter(p => p.id !== id);
+            saveToLocalStorage('admin_policies', policies);
+            logActivity(`Deleted policy: ${id}`);
+            showToast('Policy deleted successfully!', 'danger');
+            renderPolicyTable();
+        }
+
+        // API Management
+        async function fetchApiKeys() {
+            apiKeys = loadFromLocalStorage('admin_api_keys') || [
+                { id: 'key1', key: 'sk_live_abc123...', user: 'ThirdPartyApp1', status: 'active', createdAt: '2023-01-01' },
+                { id: 'key2', key: 'sk_test_def456...', user: 'AnalyticsService', status: 'inactive', createdAt: '2023-03-10' }
+            ];
+            saveToLocalStorage('admin_api_keys', apiKeys);
+            renderApiKeysTable();
+        }
+
+        async function generateNewApiKey() {
+            const newKey = {
+                id: generateUniqueId(),
+                key: 'sk_' + (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)).substring(0, 20) + '...', // Simulated partial key
+                user: 'New Service', // Placeholder, would be set by admin
+                status: 'active',
+                createdAt: new Date().toISOString()
+            };
+            apiKeys.push(newKey);
+            saveToLocalStorage('admin_api_keys', apiKeys);
+            logActivity(`Generated new API key: ${newKey.id}`);
+            showToast('New API key generated!');
+            renderApiKeysTable();
+        }
+
+        async function revokeApiKey(id) {
+            const key = apiKeys.find(k => k.id === id);
+            if (key) key.status = 'revoked';
+            saveToLocalStorage('admin_api_keys', apiKeys);
+            logActivity(`Revoked API key: ${id}`);
+            showToast('API key revoked!', 'warning');
+            renderApiKeysTable();
+        }
+
+        // Audit Trail
+        async function fetchAuditLog() {
+            auditLog = loadFromLocalStorage('admin_audit_log') || [];
+            if (auditLog.length === 0) { // Seed initial data if empty
+                auditLog = [
+                    { timestamp: new Date(Date.now() - 3600000).toISOString(), user: 'Admin User', action: 'login', details: 'Successful login', ipAddress: '192.168.1.1' },
+                    { timestamp: new Date(Date.now() - 1800000).toISOString(), user: 'Admin User', action: 'user_update', details: 'Approved user u1', ipAddress: '192.168.1.1' },
+                    { timestamp: new Date(Date.now() - 600000).toISOString(), user: 'Admin User', action: 'order_status_change', details: 'Order ORD002 status changed to accepted', ipAddress: '192.168.1.1' }
+                ];
+                saveToLocalStorage('admin_audit_log', auditLog);
+            }
+            renderAuditTable();
+        }
+
+        // Roles & Permissions
+        async function fetchRoles() {
+            roles = loadFromLocalStorage('admin_roles') || [
+                { id: 'r1', name: 'Super Admin', description: 'Full access to all features', permissions: ['all'] },
+                { id: 'r2', name: 'Moderator', description: 'Manage users and disputes', permissions: ['user_manage', 'dispute_manage'] },
+                { id: 'r3', name: 'Finance Manager', description: 'View finance and orders', permissions: ['finance_view', 'order_view'] }
+            ];
+            saveToLocalStorage('admin_roles', roles);
+            renderRolesTable();
+        }
+
+        async function saveRole(role) {
+            if (role.id) {
+                const index = roles.findIndex(r => r.id === role.id);
+                if (index !== -1) roles[index] = role;
+                logActivity(`Updated role: ${role.name}`);
+                showToast('Role updated successfully!');
+            } else {
+                role.id = generateUniqueId();
+                roles.push(role);
+                logActivity(`Added new role: ${role.name}`);
+                showToast('Role added successfully!');
+            }
+            saveToLocalStorage('admin_roles', roles);
+            renderRolesTable();
+        }
+
+        async function deleteRole(id) {
+            const role = roles.find(r => r.id === id);
+            roles = roles.filter(r => r.id !== id);
+            saveToLocalStorage('admin_roles', roles);
+            logActivity(`Deleted role: ${role.name}`);
+            showToast('Role deleted successfully!', 'danger');
+            renderRolesTable();
+        }
+
+        // --- Render Table Functions ---
+
+        function renderUserTable() {
+            const searchTerm = document.getElementById('user-search').value.toLowerCase();
+            const roleFilter = document.getElementById('user-role-filter').value;
+            const statusFilter = document.getElementById('user-status-filter').value;
+
+            let filteredUsers = users.filter(user => {
+                const matchesSearch = user.name.toLowerCase().includes(searchTerm) || user.email.toLowerCase().includes(searchTerm);
+                const matchesRole = roleFilter ? user.role === roleFilter : true;
+                const matchesStatus = statusFilter ? user.status === statusFilter : true;
+                return matchesSearch && matchesRole && matchesStatus;
+            });
+
+            const totalPages = Math.ceil(filteredUsers.length / userRowsPerPage);
+            userCurrentPage = Math.min(userCurrentPage, totalPages || 1); // Adjust current page if filtered results are fewer
+            const startIndex = (userCurrentPage - 1) * userRowsPerPage;
+            const endIndex = startIndex + userRowsPerPage;
+            const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = '';
+            if (paginatedUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No users found.</td></tr>';
+            } else {
+                paginatedUsers.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><span class="badge bg-primary">${user.role}</span></td>
+                        <td><span class="badge bg-${user.status === 'approved' ? 'success' : user.status === 'pending' ? 'warning' : user.status === 'rejected' ? 'danger' : 'secondary'}">${user.status}</span></td>
+                        <td>${formatDate(user.joinDate)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewUserDetails('${user.id}')"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-warning" onclick="openEditUserModal('${user.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            document.getElementById('user-page-info').textContent = `Page ${userCurrentPage} of ${totalPages || 1}`;
+            document.getElementById('user-prev-page').disabled = userCurrentPage === 1;
+            document.getElementById('user-next-page').disabled = userCurrentPage === totalPages || totalPages === 0;
+        }
+
+        function renderOrderTable() {
+            const searchTerm = document.getElementById('order-search').value.toLowerCase();
+            const statusFilter = document.getElementById('order-status-filter').value;
+            const dateFilter = document.getElementById('order-date-filter').value; // This would need parsing for range
+
+            let filteredOrders = orders.filter(order => {
+                const matchesSearch = order.crop.toLowerCase().includes(searchTerm) || order.id.toLowerCase().includes(searchTerm);
+                const matchesStatus = statusFilter ? order.status === statusFilter : true;
+                // Add date filtering logic here
+                return matchesSearch && matchesStatus;
+            });
+
+            const totalPages = Math.ceil(filteredOrders.length / orderRowsPerPage);
+            orderCurrentPage = Math.min(orderCurrentPage, totalPages || 1);
+            const startIndex = (orderCurrentPage - 1) * orderRowsPerPage;
+            const endIndex = startIndex + orderRowsPerPage;
+            const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+            const tbody = document.getElementById('order-table-body');
+            tbody.innerHTML = '';
+            if (paginatedOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No orders found.</td></tr>';
+            } else {
+                paginatedOrders.forEach(order => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${order.id}</td>
+                        <td>${order.crop}</td>
+                        <td>${order.quantity} kg</td>
+                        <td>${formatCurrency(order.price)}</td>
+                        <td>${users.find(u => u.id === order.buyer)?.name || order.buyer}</td>
+                        <td>${users.find(u => u.id === order.seller)?.name || order.seller}</td>
+                        <td><span class="badge bg-${order.status === 'completed' ? 'success' : order.status === 'pending' ? 'warning' : order.status === 'cancelled' ? 'danger' : 'info'}">${order.status}</span></td>
+                        <td>${formatDate(order.orderDate)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewOrderDetails('${order.id}')"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-warning" onclick="openEditOrderModal('${order.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteOrder('${order.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            document.getElementById('order-page-info').textContent = `Page ${orderCurrentPage} of ${totalPages || 1}`;
+            document.getElementById('order-prev-page').disabled = orderCurrentPage === 1;
+            document.getElementById('order-next-page').disabled = orderCurrentPage === totalPages || totalPages === 0;
+        }
+
+        function renderDisputeTable() {
+            const searchTerm = document.getElementById('dispute-search').value.toLowerCase();
+            const statusFilter = document.getElementById('dispute-status-filter').value;
+            const priorityFilter = document.getElementById('dispute-priority-filter').value;
+
+            let filteredDisputes = disputes.filter(dispute => {
+                const matchesSearch = dispute.reason.toLowerCase().includes(searchTerm) || dispute.orderId.toLowerCase().includes(searchTerm);
+                const matchesStatus = statusFilter ? dispute.status === statusFilter : true;
+                const matchesPriority = priorityFilter ? dispute.priority === priorityFilter : true;
+                return matchesSearch && matchesStatus && matchesPriority;
+            });
+
+            const totalPages = Math.ceil(filteredDisputes.length / disputeRowsPerPage);
+            disputeCurrentPage = Math.min(disputeCurrentPage, totalPages || 1);
+            const startIndex = (disputeCurrentPage - 1) * disputeRowsPerPage;
+            const endIndex = startIndex + disputeRowsPerPage;
+            const paginatedDisputes = filteredDisputes.slice(startIndex, endIndex);
+
+            const tbody = document.getElementById('dispute-table-body');
+            tbody.innerHTML = '';
+            if (paginatedDisputes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No disputes found.</td></tr>';
+            } else {
+                paginatedDisputes.forEach(dispute => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${dispute.id}</td>
+                        <td>${dispute.orderId}</td>
+                        <td>${users.find(u => u.id === dispute.reportedBy)?.name || dispute.reportedBy}</td>
+                        <td>${dispute.reason.substring(0, 50)}...</td>
+                        <td><span class="badge bg-${dispute.status === 'open' ? 'danger' : dispute.status === 'resolved' ? 'success' : 'info'}">${dispute.status}</span></td>
+                        <td><span class="badge bg-${dispute.priority === 'high' ? 'danger' : dispute.priority === 'medium' ? 'warning' : 'info'}">${dispute.priority}</span></td>
+                        <td>${formatDate(dispute.reportDate)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewDisputeDetails('${dispute.id}')"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-warning" onclick="openEditDisputeModal('${dispute.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteDispute('${dispute.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            document.getElementById('dispute-badge').textContent = disputes.filter(d => d.status === 'open' || d.status === 'in-review').length;
+            document.getElementById('dispute-page-info').textContent = `Page ${disputeCurrentPage} of ${totalPages || 1}`;
+            document.getElementById('dispute-prev-page').disabled = disputeCurrentPage === 1;
+            document.getElementById('dispute-next-page').disabled = disputeCurrentPage === totalPages || totalPages === 0;
+        }
+
+        function renderFAQTable() {
+            const tbody = document.getElementById('faq-table-body');
+            tbody.innerHTML = '';
+            if (faqs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">No FAQs found.</td></tr>';
+            } else {
+                faqs.forEach(faq => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${faq.id}</td>
+                        <td>${faq.question.substring(0, 100)}...</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick="openEditFAQModal('${faq.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteFAQ('${faq.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function renderAnnouncementTable() {
+            const tbody = document.getElementById('announcement-table-body');
+            tbody.innerHTML = '';
+            if (announcements.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No announcements found.</td></tr>';
+            } else {
+                announcements.forEach(ann => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${ann.id}</td>
+                        <td>${ann.title}</td>
+                        <td>${formatDate(ann.publishDate)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick="openEditAnnouncementModal('${ann.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${ann.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function renderPolicyTable() {
+            const tbody = document.getElementById('policy-table-body');
+            tbody.innerHTML = '';
+            if (policies.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No policies found.</td></tr>';
+            } else {
+                policies.forEach(policy => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${policy.id}</td>
+                        <td>${policy.title}</td>
+                        <td>${formatDate(policy.lastUpdated)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick="openEditPolicyModal('${policy.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deletePolicy('${policy.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function renderApiKeysTable() {
+            const tbody = document.getElementById('api-keys-table-body');
+            tbody.innerHTML = '';
+            if (apiKeys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No API keys found.</td></tr>';
+            } else {
+                apiKeys.forEach(key => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${key.id}</td>
+                        <td><code>${key.key}</code></td>
+                        <td>${key.user}</td>
+                        <td><span class="badge bg-${key.status === 'active' ? 'success' : 'secondary'}">${key.status}</span></td>
+                        <td>${formatDate(key.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="revokeApiKey('${key.id}')" ${key.status === 'revoked' ? 'disabled' : ''}>Revoke</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function renderAuditTable() {
+            const searchTerm = document.getElementById('audit-search').value.toLowerCase();
+            const userFilter = document.getElementById('audit-user-filter').value;
+            const actionFilter = document.getElementById('audit-action-filter').value;
+
+            let filteredAuditLog = auditLog.filter(log => {
+                const matchesSearch = log.details.toLowerCase().includes(searchTerm) || log.action.toLowerCase().includes(searchTerm);
+                const matchesUser = userFilter ? log.user === userFilter : true;
+                const matchesAction = actionFilter ? log.action === actionFilter : true;
+                return matchesSearch && matchesUser && matchesAction;
+            });
+
+            const totalPages = Math.ceil(filteredAuditLog.length / auditRowsPerPage);
+            auditCurrentPage = Math.min(auditCurrentPage, totalPages || 1);
+            const startIndex = (auditCurrentPage - 1) * auditRowsPerPage;
+            const endIndex = startIndex + auditRowsPerPage;
+            const paginatedAuditLog = filteredAuditLog.slice(startIndex, endIndex);
+
+            const tbody = document.getElementById('audit-table-body');
+            tbody.innerHTML = '';
+            if (paginatedAuditLog.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No audit logs found.</td></tr>';
+            } else {
+                paginatedAuditLog.forEach(log => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${formatDateTime(log.timestamp)}</td>
+                        <td>${log.user}</td>
+                        <td>${log.action}</td>
+                        <td>${log.details}</td>
+                        <td>${log.ipAddress}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            document.getElementById('audit-page-info').textContent = `Page ${auditCurrentPage} of ${totalPages || 1}`;
+            document.getElementById('audit-prev-page').disabled = auditCurrentPage === 1;
+            document.getElementById('audit-next-page').disabled = auditCurrentPage === totalPages || totalPages === 0;
+        }
+
+        function renderRolesTable() {
+            const tbody = document.getElementById('rbac-table-body');
+            tbody.innerHTML = '';
+            if (roles.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">No roles found.</td></tr>';
+            } else {
+                roles.forEach(role => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${role.name}</td>
+                        <td>${role.description}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick="openEditRoleModal('${role.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteRole('${role.id}')" ${role.name === 'Super Admin' ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // --- Dashboard Stats & Charts ---
+
+        function updateDashboardStats() {
+            document.getElementById('total-users').textContent = users.length;
+            document.getElementById('total-orders').textContent = orders.length;
+            document.getElementById('pending-disputes').textContent = disputes.filter(d => d.status === 'open' || d.status === 'in-review').length;
+            const totalRevenue = orders.reduce((sum, order) => sum + (order.quantity * order.price), 0);
+            document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
+
+            renderRecentActivity();
+        }
+
+        function renderRecentActivity() {
+            const recentActivityList = document.getElementById('recent-activity-list');
+            recentActivityList.innerHTML = '';
+            const recentLogs = auditLog.slice(0, 5); // Show last 5 activities
+            if (recentLogs.length === 0) {
+                recentActivityList.innerHTML = '<div class="list-group-item text-muted">No recent activity.</div>';
+            } else {
+                recentLogs.forEach(log => {
+                    const div = document.createElement('div');
+                    div.className = 'list-group-item';
+                    div.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-1">${log.action.replace(/_/g, ' ')}</h6>
+                            <small class="text-muted">${formatDateTime(log.timestamp)}</small>
+                        </div>
+                        <p class="mb-1">${log.details}</p>
+                        <small class="text-muted">By ${log.user}</small>
+                    `;
+                    recentActivityList.appendChild(div);
+                });
+            }
+        }
+
+        function updateAnalyticsCharts() {
+            // User Distribution Chart
+            const userRoles = users.reduce((acc, user) => {
+                acc[user.role] = (acc[user.role] || 0) + 1;
+                return acc;
+            }, {});
+            if (userDistributionChartInstance) userDistributionChartInstance.destroy();
+            userDistributionChartInstance = new Chart(document.getElementById('userDistributionChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(userRoles),
+                    datasets: [{
+                        data: Object.values(userRoles),
+                        backgroundColor: ['#2c5aa0', '#28a745', '#dc3545', '#ffc107'],
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Platform Activity Chart (User Registrations & Orders)
+            const activityData = generateActivityChartData(document.getElementById('activity-chart-filter').value);
+            if (activityChartInstance) activityChartInstance.destroy();
+            activityChartInstance = new Chart(document.getElementById('activityChart'), {
+                type: 'line',
+                data: {
+                    labels: activityData.labels,
+                    datasets: [
+                        { label: 'User Registrations', data: activityData.userRegs, borderColor: '#2c5aa0', tension: 0.3, fill: false },
+                        { label: 'Orders', data: activityData.orders, borderColor: '#28a745', tension: 0.3, fill: false }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } } }
+            });
+
+            // Analytics Section Charts
+            // User Registration Trends
+            const userRegTrends = generateUserRegTrends();
+            if (analyticsUserRegChartInstance) analyticsUserRegChartInstance.destroy();
+            analyticsUserRegChartInstance = new Chart(document.getElementById('analytics-user-reg-chart'), {
+                type: 'line',
+                data: {
+                    labels: userRegTrends.labels,
+                    datasets: [{ label: 'New Users', data: userRegTrends.data, borderColor: '#2c5aa0', tension: 0.3, fill: false }]
+                },
+                options: { responsive: true }
+            });
+
+            // Order Volume Trends
+            const orderVolumeTrends = generateOrderVolumeTrends();
+            if (analyticsOrderVolumeChartInstance) analyticsOrderVolumeChartInstance.destroy();
+            analyticsOrderVolumeChartInstance = new Chart(document.getElementById('analytics-order-volume-chart'), {
+                type: 'bar',
+                data: {
+                    labels: orderVolumeTrends.labels,
+                    datasets: [{ label: 'Order Count', data: orderVolumeTrends.data, backgroundColor: '#28a745' }]
+                },
+                options: { responsive: true }
+            });
+
+            // Top Crops Traded
+            const topCrops = generateTopCropsData();
+            if (analyticsTopCropsChartInstance) analyticsTopCropsChartInstance.destroy();
+            analyticsTopCropsChartInstance = new Chart(document.getElementById('analytics-top-crops-chart'), {
+                type: 'bar',
+                data: {
+                    labels: topCrops.labels,
+                    datasets: [{ label: 'Quantity (kg)', data: topCrops.data, backgroundColor: '#ffc107' }]
+                },
+                options: { indexAxis: 'y', responsive: true }
+            });
+
+            // Revenue by Month
+            const revenueByMonth = generateRevenueByMonth();
+            if (analyticsRevenueChartInstance) analyticsRevenueChartInstance.destroy();
+            analyticsRevenueChartInstance = new Chart(document.getElementById('analytics-revenue-chart'), {
+                type: 'line',
+                data: {
+                    labels: revenueByMonth.labels,
+                    datasets: [{ label: 'Revenue ($)', data: revenueByMonth.data, borderColor: '#17a2b8', tension: 0.3, fill: false }]
+                },
+                options: { responsive: true }
+            });
+
+            // Finance Charts
+            const financeData = generateFinanceData();
+            if (financeRevenueExpenseChartInstance) financeRevenueExpenseChartInstance.destroy();
+            financeRevenueExpenseChartInstance = new Chart(document.getElementById('finance-revenue-expense-chart'), {
+                type: 'bar',
+                data: {
+                    labels: financeData.labels,
+                    datasets: [
+                        { label: 'Revenue', data: financeData.revenue, backgroundColor: '#28a745' },
+                        { label: 'Expenses', data: financeData.expenses, backgroundColor: '#dc3545' }
+                    ]
+                },
+                options: { responsive: true }
+            });
+
+            document.getElementById('finance-total-transactions').textContent = financeData.totalTransactions;
+            document.getElementById('finance-successful-transactions').textContent = financeData.successfulTransactions;
+            document.getElementById('finance-failed-transactions').textContent = financeData.failedTransactions;
+            document.getElementById('finance-commissions-earned').textContent = formatCurrency(financeData.commissionsEarned);
+            document.getElementById('finance-payouts-made').textContent = formatCurrency(financeData.payoutsMade);
+
+            if (financePaymentStatusChartInstance) financePaymentStatusChartInstance.destroy();
+            financePaymentStatusChartInstance = new Chart(document.getElementById('finance-payment-status-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Successful', 'Failed'],
+                    datasets: [{
+                        data: [financeData.successfulTransactions, financeData.failedTransactions],
+                        backgroundColor: ['#28a745', '#dc3545']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // System Health Charts
+            const apiResponseTimes = generateApiResponseTimes();
+            if (apiUsageChartInstance) apiUsageChartInstance.destroy();
+            apiUsageChartInstance = new Chart(document.getElementById('api-response-chart'), {
+                type: 'line',
+                data: {
+                    labels: apiResponseTimes.labels,
+                    datasets: [{ label: 'Avg. Response Time (ms)', data: apiResponseTimes.data, borderColor: '#2c5aa0', tension: 0.3, fill: false }]
+                },
+                options: { responsive: true }
+            });
+
+            const apiUsage = generateApiUsageData();
+            if (apiUsageChartInstance) apiUsageChartInstance.destroy();
+            apiUsageChartInstance = new Chart(document.getElementById('api-usage-chart'), {
+                type: 'bar',
+                data: {
+                    labels: apiUsage.labels,
+                    datasets: [{ label: 'API Calls', data: apiUsage.data, backgroundColor: '#4a7fc0' }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        // --- Data Generation for Charts (Simulated) ---
+        function generateActivityChartData(days) {
+            const labels = [];
+            const userRegs = [];
+            const ordersData = [];
+            const today = new Date();
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                labels.push(formatDate(d));
+
+                const dailyUsers = users.filter(u => u.joinDate.startsWith(dateStr)).length;
+                const dailyOrders = orders.filter(o => o.orderDate.startsWith(dateStr)).length;
+                userRegs.push(dailyUsers);
+                ordersData.push(dailyOrders);
+            }
+            return { labels, userRegs, orders: ordersData };
+        }
+
+        function generateUserRegTrends() {
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+            const data = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55]; // Sample data
+            return { labels, data };
+        }
+
+        function generateOrderVolumeTrends() {
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+            const data = [5, 8, 12, 10, 15, 18, 20, 22, 25, 28]; // Sample data
+            return { labels, data };
+        }
+
+        function generateTopCropsData() {
+            const cropCounts = orders.reduce((acc, order) => {
+                acc[order.crop] = (acc[order.crop] || 0) + order.quantity;
+                return acc;
+            }, {});
+            const sortedCrops = Object.entries(cropCounts).sort(([, a], [, b]) => b - a).slice(0, 5);
+            return { labels: sortedCrops.map(c => c[0]), data: sortedCrops.map(c => c[1]) };
+        }
+
+        function generateRevenueByMonth() {
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+            const data = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500]; // Sample data
+            return { labels, data };
+        }
+
+        function generateFinanceData() {
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+            const revenue = [10000, 12000, 11000, 13000, 14000, 15000, 16000, 17000, 18000, 19000];
+            const expenses = [3000, 3500, 3200, 3800, 4000, 4200, 4500, 4800, 5000, 5200];
+            const totalTransactions = 1500;
+            const successfulTransactions = 1450;
+            const failedTransactions = 50;
+            const commissionsEarned = orders.reduce((sum, order) => sum + (order.quantity * order.price * 0.025), 0); // 2.5% commission
+            const payoutsMade = orders.reduce((sum, order) => sum + (order.quantity * order.price * 0.975), 0); // 97.5% payout
+            return { labels, revenue, expenses, totalTransactions, successfulTransactions, failedTransactions, commissionsEarned, payoutsMade };
+        }
+
+        function generateApiResponseTimes() {
+            const labels = ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00'];
+            const data = [50, 55, 48, 60, 52, 58, 65]; // Sample data
+            return { labels, data };
+        }
+
+        function generateApiUsageData() {
+            const labels = ['User API', 'Order API', 'Payment API', 'Notification API'];
+            const data = [1200, 800, 300, 500]; // Sample data
+            return { labels, data };
+        }
+
+        // --- Modal Functions ---
+
+        function viewUserDetails(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            document.getElementById('user-details-modal-body').innerHTML = `
+                <p><strong>ID:</strong> ${user.id}</p>
+                <p><strong>Name:</strong> ${user.name}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Mobile:</strong> ${user.mobile || 'N/A'}</p>
+                <p><strong>Role:</strong> <span class="badge bg-primary">${user.role}</span></p>
+                <p><strong>Status:</strong> <span class="badge bg-${user.status === 'approved' ? 'success' : user.status === 'pending' ? 'warning' : user.status === 'rejected' ? 'danger' : 'secondary'}">${user.status}</span></p>
+                <p><strong>Join Date:</strong> ${formatDate(user.joinDate)}</p>
+                <p><strong>Address:</strong> ${user.address || 'N/A'}</p>
+                ${user.role === 'farmer' ? `
+                    <p><strong>Primary Crop:</strong> ${user.primaryCrop || 'N/A'}</p>
+                    <p><strong>Land/ID Proof:</strong> ${user.landProof ? `<a href="${user.landProof}" target="_blank" class="document-link">View Document</a>` : 'N/A'}</p>
+                ` : ''}
+                ${user.role === 'trader' ? `
+                    <p><strong>Business Name:</strong> ${user.businessName || 'N/A'}</p>
+                    <p><strong>Business/ID Proof:</strong> ${user.businessProof ? `<a href="${user.businessProof}" target="_blank" class="document-link">View Document</a>` : 'N/A'}</p>
+                ` : ''}
+            `;
+            document.getElementById('edit-user-btn').onclick = () => {
+                userDetailsModal.hide();
+                openEditUserModal(id);
+            };
+            userDetailsModal.show();
+        }
+
+        function openAddUserModal() {
+            document.getElementById('editAddUserModalLabel').textContent = 'Add New User';
+            document.getElementById('user-form').reset();
+            document.getElementById('user-form-id').value = '';
+            document.getElementById('user-form-land-proof-current').textContent = '';
+            document.getElementById('user-form-business-proof-current').textContent = '';
+            editAddUserModal.show();
+        }
+
+        function openEditUserModal(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            document.getElementById('editAddUserModalLabel').textContent = 'Edit User';
+            document.getElementById('user-form-id').value = user.id;
+            document.getElementById('user-form-name').value = user.name;
+            document.getElementById('user-form-email').value = user.email;
+            document.getElementById('user-form-mobile').value = user.mobile || '';
+            document.getElementById('user-form-role').value = user.role;
+            document.getElementById('user-form-status').value = user.status;
+            document.getElementById('user-form-address').value = user.address || '';
+            document.getElementById('user-form-primary-crop').value = user.primaryCrop || '';
+            document.getElementById('user-form-business-name').value = user.businessName || '';
+            document.getElementById('user-form-land-proof-current').textContent = user.landProof ? `Current: ${user.landProof.split('/').pop()}` : '';
+            document.getElementById('user-form-business-proof-current').textContent = user.businessProof ? `Current: ${user.businessProof.split('/').pop()}` : '';
+            editAddUserModal.show();
+        }
+
+        document.getElementById('user-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('user-form-id').value;
+            const newUser = {
+                id: id || null,
+                name: document.getElementById('user-form-name').value,
+                email: document.getElementById('user-form-email').value,
+                mobile: document.getElementById('user-form-mobile').value,
+                role: document.getElementById('user-form-role').value,
+                status: document.getElementById('user-form-status').value,
+                address: document.getElementById('user-form-address').value,
+                primaryCrop: document.getElementById('user-form-primary-crop').value,
+                businessName: document.getElementById('user-form-business-name').value,
+                // For file inputs, you'd handle file uploads to a backend/cloud storage here
+                // For demo, we'll just keep the old URL or null if new file is selected
+                landProof: id ? (users.find(u => u.id === id)?.landProof || null) : null,
+                businessProof: id ? (users.find(u => u.id === id)?.businessProof || null) : null,
+                joinDate: id ? users.find(u => u.id === id).joinDate : new Date().toISOString()
+            };
+            // If new files are selected, you'd upload them and update the URLs
+            // const landProofFile = document.getElementById('user-form-land-proof').files[0];
+            // if (landProofFile) { /* upload file and get URL */ newUser.landProof = 'new_url'; }
+            saveUser(newUser);
+            editAddUserModal.hide();
+        });
+
+        function viewOrderDetails(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            document.getElementById('order-details-modal-body').innerHTML = `
+                <p><strong>Order ID:</strong> ${order.id}</p>
+                <p><strong>Crop:</strong> ${order.crop}</p>
+                <p><strong>Quantity:</strong> ${order.quantity} kg</p>
+                <p><strong>Price:</strong> ${formatCurrency(order.price)}</p>
+                <p><strong>Buyer:</strong> ${users.find(u => u.id === order.buyer)?.name || order.buyer}</p>
+                <p><strong>Seller:</strong> ${users.find(u => u.id === order.seller)?.name || order.seller}</p>
+                <p><strong>Status:</strong> <span class="badge bg-${order.status === 'completed' ? 'success' : order.status === 'pending' ? 'warning' : order.status === 'cancelled' ? 'danger' : 'info'}">${order.status}</span></p>
+                <p><strong>Order Date:</strong> ${formatDate(order.orderDate)}</p>
+            `;
+            document.getElementById('edit-order-btn').onclick = () => {
+                orderDetailsModal.hide();
+                openEditOrderModal(id);
+            };
+            orderDetailsModal.show();
+        }
+
+        function openAddOrderModal() {
+            document.getElementById('editAddOrderModalLabel').textContent = 'Add New Order';
+            document.getElementById('order-form').reset();
+            document.getElementById('order-form-id').value = '';
+            editAddOrderModal.show();
+        }
+
+        function openEditOrderModal(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            document.getElementById('editAddOrderModalLabel').textContent = 'Edit Order';
+            document.getElementById('order-form-id').value = order.id;
+            document.getElementById('order-form-crop').value = order.crop;
+            document.getElementById('order-form-quantity').value = order.quantity;
+            document.getElementById('order-form-price').value = order.price;
+            document.getElementById('order-form-buyer').value = order.buyer;
+            document.getElementById('order-form-seller').value = order.seller;
+            document.getElementById('order-form-status').value = order.status;
+            document.getElementById('order-form-date').value = order.orderDate.split('T')[0]; // For date input
+            editAddOrderModal.show();
+        }
+
+        document.getElementById('order-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('order-form-id').value;
+            const newOrder = {
+                id: id || null,
+                crop: document.getElementById('order-form-crop').value,
+                quantity: parseFloat(document.getElementById('order-form-quantity').value),
+                price: parseFloat(document.getElementById('order-form-price').value),
+                buyer: document.getElementById('order-form-buyer').value,
+                seller: document.getElementById('order-form-seller').value,
+                status: document.getElementById('order-form-status').value,
+                orderDate: document.getElementById('order-form-date').value // Use this as is, or convert to ISO
+            };
+            saveOrder(newOrder);
+            editAddOrderModal.hide();
+        });
+
+        function viewDisputeDetails(id) {
+            const dispute = disputes.find(d => d.id === id);
+            if (!dispute) return;
+            document.getElementById('dispute-details-modal-body').innerHTML = `
+                <p><strong>Dispute ID:</strong> ${dispute.id}</p>
+                <p><strong>Order ID:</strong> ${dispute.orderId}</p>
+                <p><strong>Reported By:</strong> ${users.find(u => u.id === dispute.reportedBy)?.name || dispute.reportedBy}</p>
+                <p><strong>Reason:</strong> ${dispute.reason}</p>
+                <p><strong>Status:</strong> <span class="badge bg-${dispute.status === 'open' ? 'danger' : dispute.status === 'resolved' ? 'success' : 'info'}">${dispute.status}</span></p>
+                <p><strong>Priority:</strong> <span class="badge bg-${dispute.priority === 'high' ? 'danger' : dispute.priority === 'medium' ? 'warning' : 'info'}">${dispute.priority}</span></p>
+                <p><strong>Report Date:</strong> ${formatDate(dispute.reportDate)}</p>
+                <p><strong>Resolution Notes:</strong> ${dispute.resolutionNotes || 'N/A'}</p>
+            `;
+            document.getElementById('edit-dispute-btn').onclick = () => {
+                disputeDetailsModal.hide();
+                openEditDisputeModal(id);
+            };
+            disputeDetailsModal.show();
+        }
+
+        function openAddDisputeModal() {
+            document.getElementById('editAddDisputeModalLabel').textContent = 'Add New Dispute';
+            document.getElementById('dispute-form').reset();
+            document.getElementById('dispute-form-id').value = '';
+            editAddDisputeModal.show();
+        }
+
+        function openEditDisputeModal(id) {
+            const dispute = disputes.find(d => d.id === id);
+            if (!dispute) return;
+            document.getElementById('editAddDisputeModalLabel').textContent = 'Edit Dispute';
+            document.getElementById('dispute-form-id').value = dispute.id;
+            document.getElementById('dispute-form-order-id').value = dispute.orderId;
+            document.getElementById('dispute-form-reported-by').value = dispute.reportedBy;
+            document.getElementById('dispute-form-reason').value = dispute.reason;
+            document.getElementById('dispute-form-status').value = dispute.status;
+            document.getElementById('dispute-form-priority').value = dispute.priority;
+            document.getElementById('dispute-form-report-date').value = dispute.reportDate.split('T')[0];
+            document.getElementById('dispute-form-resolution-notes').value = dispute.resolutionNotes || '';
+            editAddDisputeModal.show();
+        }
+
+        document.getElementById('dispute-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('dispute-form-id').value;
+            const newDispute = {
+                id: id || null,
+                orderId: document.getElementById('dispute-form-order-id').value,
+                reportedBy: document.getElementById('dispute-form-reported-by').value,
+                reason: document.getElementById('dispute-form-reason').value,
+                status: document.getElementById('dispute-form-status').value,
+                priority: document.getElementById('dispute-form-priority').value,
+                reportDate: document.getElementById('dispute-form-report-date').value,
+                resolutionNotes: document.getElementById('dispute-form-resolution-notes').value
+            };
+            saveDispute(newDispute);
+            editAddDisputeModal.hide();
+        });
+
+        function openAddFAQModal() {
+            document.getElementById('editAddFAQModalLabel').textContent = 'Add New FAQ';
+            document.getElementById('faq-form').reset();
+            document.getElementById('faq-form-id').value = '';
+            editAddFAQModal.show();
+        }
+
+        function openEditFAQModal(id) {
+            const faq = faqs.find(f => f.id === id);
+            if (!faq) return;
+            document.getElementById('editAddFAQModalLabel').textContent = 'Edit FAQ';
+            document.getElementById('faq-form-id').value = faq.id;
+            document.getElementById('faq-form-question').value = faq.question;
+            document.getElementById('faq-form-answer').value = faq.answer;
+            editAddFAQModal.show();
+        }
+
+        document.getElementById('faq-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('faq-form-id').value;
+            const newFAQ = {
+                id: id || null,
+                question: document.getElementById('faq-form-question').value,
+                answer: document.getElementById('faq-form-answer').value
+            };
+            saveFAQ(newFAQ);
+            editAddFAQModal.hide();
+        });
+
+        function openAddAnnouncementModal() {
+            document.getElementById('editAddAnnouncementModalLabel').textContent = 'Add New Announcement';
+            document.getElementById('announcement-form').reset();
+            document.getElementById('announcement-form-id').value = '';
+            editAddAnnouncementModal.show();
+        }
+
+        function openEditAnnouncementModal(id) {
+            const ann = announcements.find(a => a.id === id);
+            if (!ann) return;
+            document.getElementById('editAddAnnouncementModalLabel').textContent = 'Edit Announcement';
+            document.getElementById('announcement-form-id').value = ann.id;
+            document.getElementById('announcement-form-title').value = ann.title;
+            document.getElementById('announcement-form-content').value = ann.content;
+            document.getElementById('announcement-form-publish-date').value = ann.publishDate.split('T')[0];
+            editAddAnnouncementModal.show();
+        }
+
+        document.getElementById('announcement-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('announcement-form-id').value;
+            const newAnn = {
+                id: id || null,
+                title: document.getElementById('announcement-form-title').value,
+                content: document.getElementById('announcement-form-content').value,
+                publishDate: document.getElementById('announcement-form-publish-date').value
+            };
+            saveAnnouncement(newAnn);
+            editAddAnnouncementModal.hide();
+        });
+
+        function openAddPolicyModal() {
+            document.getElementById('editAddPolicyModalLabel').textContent = 'Add New Policy';
+            document.getElementById('policy-form').reset();
+            document.getElementById('policy-form-id').value = '';
+            editAddPolicyModal.show();
+        }
+
+        function openEditPolicyModal(id) {
+            const policy = policies.find(p => p.id === id);
+            if (!policy) return;
+            document.getElementById('editAddPolicyModalLabel').textContent = 'Edit Policy';
+            document.getElementById('policy-form-id').value = policy.id;
+            document.getElementById('policy-form-title').value = policy.title;
+            document.getElementById('policy-form-content').value = policy.content;
+            document.getElementById('policy-form-last-updated').value = policy.lastUpdated.split('T')[0];
+            editAddPolicyModal.show();
+        }
+
+        document.getElementById('policy-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('policy-form-id').value;
+            const newPolicy = {
+                id: id || null,
+                title: document.getElementById('policy-form-title').value,
+                content: document.getElementById('policy-form-content').value,
+                lastUpdated: document.getElementById('policy-form-last-updated').value
+            };
+            savePolicy(newPolicy);
+            editAddPolicyModal.hide();
+        });
+
+        function openAddRoleModal() {
+            document.getElementById('editAddRoleModalLabel').textContent = 'Add New Role';
+            document.getElementById('role-form').reset();
+            document.getElementById('role-form-id').value = '';
+            renderPermissionsCheckboxes([]);
+            editAddRoleModal.show();
+        }
+
+        function openEditRoleModal(id) {
+            const role = roles.find(r => r.id === id);
+            if (!role) return;
+            document.getElementById('editAddRoleModalLabel').textContent = 'Edit Role';
+            document.getElementById('role-form-id').value = role.id;
+            document.getElementById('role-form-name').value = role.name;
+            document.getElementById('role-form-description').value = role.description;
+            renderPermissionsCheckboxes(role.permissions);
+            editAddRoleModal.show();
+        }
+
+        function renderPermissionsCheckboxes(selectedPermissions) {
+            const permissionsContainer = document.getElementById('role-form-permissions');
+            permissionsContainer.innerHTML = '';
+            const allPermissions = [
+                'all', 'user_view', 'user_manage', 'order_view', 'order_manage',
+                'dispute_view', 'dispute_manage', 'finance_view', 'finance_manage',
+                'content_view', 'content_manage', 'system_view', 'system_manage',
+                'api_view', 'api_manage', 'audit_view', 'settings_manage', 'rbac_manage'
+            ];
+            allPermissions.forEach(perm => {
+                const colDiv = document.createElement('div');
+                colDiv.className = 'col-md-6';
+                colDiv.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${perm}" id="perm-${perm}" ${selectedPermissions.includes(perm) ? 'checked' : ''}>
+                        <label class="form-check-label" for="perm-${perm}">${perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</label>
+                    </div>
+                `;
+                permissionsContainer.appendChild(colDiv);
+            });
+        }
+
+        document.getElementById('role-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('role-form-id').value;
+            const selectedPerms = Array.from(document.querySelectorAll('#role-form-permissions input[type="checkbox"]:checked')).map(cb => cb.value);
+            const newRole = {
+                id: id || null,
+                name: document.getElementById('role-form-name').value,
+                description: document.getElementById('role-form-description').value,
+                permissions: selectedPerms
+            };
+            saveRole(newRole);
+            editAddRoleModal.hide();
+        });
+
+        // --- Event Listeners ---
+
+        // Sidebar Navigation
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        document.querySelectorAll('.sidebar-menu a').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetSectionId = this.getAttribute('href').substring(1);
+                showSection(targetSectionId);
+            });
+        });
+
+        function showSection(sectionId) {
+            // Update active menu item
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`.sidebar-menu a[href="#${sectionId}"]`).classList.add('active');
+
+            // Hide all content sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show target section
+            document.getElementById(`${sectionId}-content`).style.display = 'block';
+
+            // Re-render tables/charts specific to the section
+            if (sectionId === 'user-management') renderUserTable();
+            if (sectionId === 'order-management') renderOrderTable();
+            if (sectionId === 'dispute-management') renderDisputeTable();
+            if (sectionId === 'analytics') updateAnalyticsCharts();
+            if (sectionId === 'finance') updateAnalyticsCharts(); // Re-uses some analytics charts
+            if (sectionId === 'content-management') {
+                fetchFAQs();
+                fetchAnnouncements();
+                fetchPolicies();
+            }
+            if (sectionId === 'system-health') updateAnalyticsCharts(); // Re-uses some analytics charts
+            if (sectionId === 'api-management') fetchApiKeys();
+            if (sectionId === 'audit-trail') renderAuditTable();
+            if (sectionId === 'settings') {
+                fetchRoles();
+                // Load general and profile settings
+                document.getElementById('platform-name').value = localStorage.getItem('platform_name') || 'FarmTrade Connect';
+                document.getElementById('default-commission').value = localStorage.getItem('default_commission') || '2.5';
+                document.getElementById('admin-profile-name').value = localStorage.getItem('admin_profile_name') || 'Super Admin';
+                document.getElementById('admin-profile-email').value = localStorage.getItem('admin_profile_email') || 'admin@farmtrade.com';
+            }
+        }
+
+        // Dashboard Activity Chart Filter
+        document.getElementById('activity-chart-filter').addEventListener('change', updateAnalyticsCharts);
+
+        // User Management Filters
+        document.getElementById('user-search').addEventListener('input', () => { userCurrentPage = 1; renderUserTable(); });
+        document.getElementById('user-role-filter').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+        document.getElementById('user-status-filter').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+        document.getElementById('user-prev-page').addEventListener('click', () => { if (userCurrentPage > 1) { userCurrentPage--; renderUserTable(); } });
+        document.getElementById('user-next-page').addEventListener('click', () => { userCurrentPage++; renderUserTable(); });
+        document.getElementById('user-rows-per-page').addEventListener('change', function() { userRowsPerPage = parseInt(this.value); userCurrentPage = 1; renderUserTable(); });
+
+        // Order Management Filters
+        document.getElementById('order-search').addEventListener('input', () => { orderCurrentPage = 1; renderOrderTable(); });
+        document.getElementById('order-status-filter').addEventListener('change', () => { orderCurrentPage = 1; renderOrderTable(); });
+        document.getElementById('order-date-filter').addEventListener('change', () => { orderCurrentPage = 1; renderOrderTable(); });
+        document.getElementById('order-prev-page').addEventListener('click', () => { if (orderCurrentPage > 1) { orderCurrentPage--; renderOrderTable(); } });
+        document.getElementById('order-next-page').addEventListener('click', () => { orderCurrentPage++; renderOrderTable(); });
+        document.getElementById('order-rows-per-page').addEventListener('change', function() { orderRowsPerPage = parseInt(this.value); orderCurrentPage = 1; renderOrderTable(); });
+
+        // Dispute Management Filters
+        document.getElementById('dispute-search').addEventListener('input', () => { disputeCurrentPage = 1; renderDisputeTable(); });
+        document.getElementById('dispute-status-filter').addEventListener('change', () => { disputeCurrentPage = 1; renderDisputeTable(); });
+        document.getElementById('dispute-priority-filter').addEventListener('change', () => { disputeCurrentPage = 1; renderDisputeTable(); });
+        document.getElementById('dispute-prev-page').addEventListener('click', () => { if (disputeCurrentPage > 1) { disputeCurrentPage--; renderDisputeTable(); } });
+        document.getElementById('dispute-next-page').addEventListener('click', () => { disputeCurrentPage++; renderDisputeTable(); });
+        document.getElementById('dispute-rows-per-page').addEventListener('change', function() { disputeRowsPerPage = parseInt(this.value); disputeCurrentPage = 1; renderDisputeTable(); });
+
+        // Audit Trail Filters
+        document.getElementById('audit-search').addEventListener('input', () => { auditCurrentPage = 1; renderAuditTable(); });
+        document.getElementById('audit-user-filter').addEventListener('change', () => { auditCurrentPage = 1; renderAuditTable(); });
+        document.getElementById('audit-action-filter').addEventListener('change', () => { auditCurrentPage = 1; renderAuditTable(); });
+        document.getElementById('audit-prev-page').addEventListener('click', () => { if (auditCurrentPage > 1) { auditCurrentPage--; renderAuditTable(); } });
+        document.getElementById('audit-next-page').addEventListener('click', () => { auditCurrentPage++; renderAuditTable(); });
+        document.getElementById('audit-rows-per-page').addEventListener('change', function() { auditRowsPerPage = parseInt(this.value); auditCurrentPage = 1; renderAuditTable(); });
+
+        // --- Export Functions ---
+        function exportTableToExcel(tableId, filename) {
+            const table = document.getElementById(tableId);
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+            XLSX.writeFile(wb, filename);
+            logActivity(`Exported ${tableId} to Excel`);
+        }
+
+        async function exportTableToPDF(tableId, filename) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text(filename.replace('.pdf', ''), 14, 16);
+            doc.autoTable({ html: `#${tableId}`, startY: 20 });
+            await doc.save(filename);
+            logActivity(`Exported ${tableId} to PDF`);
+        }
+
+        document.getElementById('exportUsersExcel').addEventListener('click', () => exportTableToExcel('user-table-body', 'users.xlsx'));
+        document.getElementById('exportUsersPDF').addEventListener('click', () => exportTableToPDF('user-table-body', 'users.pdf'));
+        document.getElementById('exportOrdersExcel').addEventListener('click', () => exportTableToExcel('order-table-body', 'orders.xlsx'));
+        document.getElementById('exportOrdersPDF').addEventListener('click', () => exportTableToPDF('order-table-body', 'orders.pdf'));
+        document.getElementById('exportAuditLog').addEventListener('click', () => exportTableToExcel('audit-table-body', 'audit_log.xlsx')); // PDF for audit log is also possible
+
+        // --- Settings Functions ---
+        function showProfileSettings() {
+            showSection('settings');
+            new bootstrap.Tab(document.getElementById('profile-settings-tab')).show();
+        }
+
+        function showGeneralSettings() {
+            showSection('settings');
+            new bootstrap.Tab(document.getElementById('general-settings-tab')).show();
+        }
+
+        function saveGeneralSettings() {
+            localStorage.setItem('platform_name', document.getElementById('platform-name').value);
+            localStorage.setItem('default_commission', document.getElementById('default-commission').value);
+            logActivity('Updated general settings');
+            showToast('General settings saved!');
+        }
+
+        function saveAdminProfile() {
+            localStorage.setItem('admin_profile_name', document.getElementById('admin-profile-name').value);
+            localStorage.setItem('admin_profile_email', document.getElementById('admin-profile-email').value);
+            // Password change would involve backend API
+            document.getElementById('admin-username').textContent = document.getElementById('admin-profile-name').value;
+            logActivity('Updated admin profile');
+            showToast('Admin profile saved!');
+        }
+
+        // --- Other Actions ---
+        function logoutAdmin() {
+            if (confirm('Are you sure you want to log out?')) {
+                // Clear session/token here in a real app
+                window.location.href = 'admin-login.html'; // Redirect to login page
+                logActivity('Admin logged out');
+            }
+        }
+
+        function viewAllNotifications() {
+            showSection('audit-trail'); // Redirect to audit trail for now
+            // In a real app, this would open a dedicated notification center
+            document.getElementById('notification-count').textContent = '0'; // Clear badge
+        }
+
+        function generateFinancialReport() {
+            logActivity('Generated detailed financial report');
+            showToast('Generating detailed financial report (check console for demo data).');
+            console.log('--- Detailed Financial Report ---');
+            console.log('Total Revenue:', document.getElementById('total-revenue').textContent);
+            console.log('Total Commissions Earned:', document.getElementById('finance-commissions-earned').textContent);
+            console.log('Total Payouts Made:', document.getElementById('finance-payouts-made').textContent);
+            console.log('Revenue/Expense Trends:', financeRevenueExpenseChartInstance.data.datasets);
+            console.log('Payment Status:', financePaymentStatusChartInstance.data.datasets);
+            console.log('---------------------------------');
+        }
+
+        function runSystemCheck() {
+            logActivity('Initiated system check');
+            showToast('Running system check...');
+            // Simulate API calls to backend for system health
+            setTimeout(() => {
+                document.getElementById('api-server-status').className = 'badge bg-success';
+                document.getElementById('api-server-status').textContent = 'Online';
+                document.getElementById('db-server-status').className = 'badge bg-success';
+                document.getElementById('db-server-status').textContent = 'Online';
+                document.getElementById('file-storage-status').className = 'badge bg-success';
+                document.getElementById('file-storage-status').textContent = '25% Used';
+                document.getElementById('last-backup-time').textContent = formatDateTime(new Date().toISOString());
+                showToast('System check completed successfully!', 'success');
+                logActivity('System check completed');
+            }, 2000);
+        }
+
+        function updateAuditUserFilter() {
+            const select = document.getElementById('audit-user-filter');
+            select.innerHTML = '<option value="">All Users</option>';
+            const uniqueUsers = [...new Set(auditLog.map(log => log.user))];
+            uniqueUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                select.appendChild(option);
+            });
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize datepickers
+            flatpickr(".datepicker", { dateFormat: "Y-m-d" });
+
+            // Fetch all data
+            await fetchUsers();
+            await fetchOrders();
+            await fetchDisputes();
+            await fetchFAQs();
+            await fetchAnnouncements();
+            await fetchPolicies();
+            await fetchApiKeys();
+            await fetchAuditLog();
+            await fetchRoles(); // Fetch roles for RBAC settings
+
+            // Initial renders
+            updateDashboardStats();
+            updateAnalyticsCharts();
+            renderUserTable();
+            renderOrderTable();
+            renderDisputeTable();
+            renderAuditTable();
+            renderRolesTable(); // Render roles table in settings
+
+            // Set initial active section
+            showSection('dashboard');
+
+            // Apply permissions based on current user role (simulated)
+            checkAndApplyPermissions();
+
+            // Update admin username in header
+            document.getElementById('admin-username').textContent = localStorage.getItem('admin_profile_name') || 'Super Admin';
+        });
+
+        // Seed initial data if localStorage is empty for some tables
+        if (!localStorage.getItem('admin_users')) fetchUsers();
+        if (!localStorage.getItem('admin_orders')) fetchOrders();
+        if (!localStorage.getItem('admin_disputes')) fetchDisputes();
+        if (!localStorage.getItem('admin_faqs')) fetchFAQs();
+        if (!localStorage.getItem('admin_announcements')) fetchAnnouncements();
+        if (!localStorage.getItem('admin_policies')) fetchPolicies();
+        if (!localStorage.getItem('admin_api_keys')) fetchApiKeys();
+        if (!localStorage.getItem('admin_audit_log')) fetchAuditLog();
+        if (!localStorage.getItem('admin_roles')) fetchRoles();
+
+    </script>
+</body>
+</html>

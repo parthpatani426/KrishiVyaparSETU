@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FarmTrade Connect - Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+   /* body {
+     background: url("assets/images/bg.jpg") no-repeat center center fixed;
+      background-size: cover;
+    }*/
+    .welcome-card {
+      max-width: 500px;
+      margin: auto;
+      margin-top: 120px;
+      padding: 30px;
+      background: rgba(139, 139, 139, 0.68); /* ✅ 75% opacity */
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0px 4px 20px rgba(0,0,0,0.25);
+    }
+    .logo {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%; /* ✅ circular shape */
+      display: block;
+      margin: 0 auto 15px auto;
+      border: 3px solid #28a745; /* optional green border */
+    }
+    .welcome-card p {
+      color: #f9fcfa; /* Green color for the title */
+    }
+   video.bg-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* shifts center */
+  width: 80%;   /* scale video */
+  height: 1000px;
+  z-index: -1; /* behind content */
+}
+  </style>
+</head>
+<body>
+      <video autoplay muted loop class="bg-video">
+    <source src="assets/videos/Video-3.mp4" type="video/mp4">
+  </video>
+  <div class="container">
+    <div class="welcome-card">
+      <!-- ✅ Circular Logo -->
+      <img src="assets/images/logo.png" alt="FarmTrade Logo" class="logo">
+
+      <h1 class="mb-3">Welcome to FarmTrade Connect</h1>
+      <p class="lead">Connecting Farmers and Traders directly for better opportunities 🚜</p>
+
+      <a href="login.html" class="btn btn-success w-100 mb-2">Login</a>
+      <a href="register.html" class="btn btn-success w-100">Register</a>
+    </div>
+  </div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

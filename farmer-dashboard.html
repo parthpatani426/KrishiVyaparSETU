@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Farmer Dashboard - FarmTrade Connect (Plant Scanner Added)</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <!-- Chart.js (optional for future stats) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Leaflet (Maps) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- Export libs -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    :root{ --brand: #198754; --muted:#6c757d; }
+    body { background: url("assets/images/bg.jpg") no-repeat center center fixed; background-size: cover; }
+    .dashboard-card{ background:#fff; border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,.06); padding:20px; margin-bottom:20px; }
+    .dashboard-card h4{ margin-bottom: .75rem; }
+    .kpi { display:grid; grid-template-columns: repeat(4, minmax(160px,1fr)); gap:12px; }
+    .kpi .card{ border-left:5px solid var(--brand); }
+    .value{ font-weight:800; font-size:1.4rem; }
+    .offcanvas-start{ width: 300px; }
+    .nav-icon-btn{ position:relative; }
+    .nav-icon-badge{ position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; line-height:18px; font-size:12px; border-radius:999px; background:#dc3545; color:#fff; text-align:center; padding:0 4px; }
+    .avatar{ width:36px; height:36px; border-radius:50%; background:#e8f5ee; color:var(--brand); display:flex; align-items:center; justify-content:center; font-weight:700; border:1px solid #cdebd7; }
+    #map { height:420px; border:1px solid #dee2e6; border-radius:10px; }
+    .browser-toolbar .form-control{ font-family: ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace; }
+    iframe.loading{ opacity:.7; pointer-events:none; }
+    #chatBox{ height:280px; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#fbfffb; }
+    .msg{ margin:6px 0; display:flex; }
+    .msg.me{ justify-content:flex-end; }
+    .bubble{ max-width:70%; padding:8px 12px; border-radius:10px; background:#eaf8ee; border:1px solid #d1efd9; }
+    .msg.me .bubble{ background:#e9f2ff; border-color:#d0e2ff; }
+    .tiny{ font-size:.8rem; color:#6c757d; }
+    .call-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    video{ width:100%; background:#000; border-radius:10px; }
+    textarea.sdp{font-family: ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace; height:90px;}
+    .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 1080; }
+    .preview{ width: 100%; max-height: 220px; border:1px dashed #cdebd7; border-radius:8px; object-fit:cover; }
+    /* Plant scanner styling */
+    .plant-card { display:grid; grid-template-columns: 360px 1fr; gap:18px; align-items:start; }
+    .camera-preview { width: 100%; height: 240px; background:#f6fff6; display:flex; align-items:center; justify-content:center; border-radius:10px; border:1px dashed #cdebd7; overflow:hidden; }
+    .camera-preview img, .camera-preview video { width:100%; height:100%; object-fit:cover; }
+    .scanner-controls .btn { min-width:110px; }
+    .disease-pill { display:inline-block; margin:6px 6px 6px 0; padding:6px 10px; border-radius:999px; background:#f1f8f3; border:1px solid #d8efe0; }
+    .remedy { background:#fffef8; border-left:4px solid #ffd54f; padding:10px; border-radius:8px; margin-top:8px; }
+    .saved-badge { font-size:.85rem; color:#0f5132; background:#e6ffed; padding:6px 8px; border-radius:999px; border:1px solid #cdebd7; }
+    @media(max-width:980px){ .plant-card{ grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-dark" style="background: var(--brand);">
+    <div class="container-fluid">
+      <button class="btn btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainMenu">☰ Menu</button>
+      <span class="navbar-brand fw-bold">🌾 FarmTrade Connect — Farmer</span>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-light nav-icon-btn" id="bellBtn" title="Notifications">🔔
+          <span class="nav-icon-badge d-none" id="bellBadge">0</span>
+        </button>
+        <div class="dropdown">
+          <button class="btn btn-light d-flex align-items-center gap-2" data-bs-toggle="dropdown" title="Profile">
+            <span class="avatar" id="avatarInitials">F</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><h6 class="dropdown-header" id="ddName">Farmer</h6></li>
+            <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">Edit Profile</button></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item text-danger" id="logoutBtn">Logout</button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SIDE MENU -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="mainMenu">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Farmer Menu</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <nav class="nav flex-column">
+        <a class="nav-link" href="#" onclick="openSection('overview')">Dashboard / Overview</a>
+        <a class="nav-link" href="#" onclick="openSection('upload')">Upload New Crop</a>
+        <a class="nav-link" href="#" onclick="openSection('inventory')">Inventory Overview</a>
+        <a class="nav-link" href="#" onclick="openSection('orders')">Orders Management</a>
+        <a class="nav-link" href="#" onclick="openSection('weather')">Local Weather</a>
+        <a class="nav-link" href="#" onclick="openSection('map')">Chizu 🗺️ </a>
+        <a class="nav-link" href="#" onclick="openSection('schemes')">Govt Schemes & Resources</a>
+        <a class="nav-link" href="#" onclick="openSection('browser')">Burauza 🌐</a>
+        <a class="nav-link" href="#" onclick="openSection('chat')">Chat & Calls</a>
+        <hr>
+        <a class="nav-link" href="#" onclick="openSection('plant')">Plant Scanner 🪴</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container my-3">
+
+    <!-- OVERVIEW -->
+    <section class="dashboard-card" id="sec-overview">
+      <h4 class="text-success mb-3">Profile & Overview</h4>
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">My Profile</h5>
+              <div class="mb-2">
+                <label class="form-label">Name</label>
+                <input id="profName" class="form-control" placeholder="Your name">
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Mobile</label>
+                <input id="profMobile" class="form-control" placeholder="10-digit mobile" maxlength="10">
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Location</label>
+                <input id="profLocation" class="form-control" placeholder="Village / City, State">
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-success btn-sm" onclick="saveProfile()">Save</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="loadProfile()">Reload</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="exportLocalDB()">Backup</button>
+              </div>
+              <div class="text-muted small mt-2">Stored locally for demo. Frontend includes safeguards (image compression, pruning).</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="kpi mb-3">
+            <div class="card"><div class="card-body"><div class="text-muted">Listings</div><div class="value" id="kpiListings">0</div></div></div>
+            <div class="card"><div class="card-body"><div class="text-muted">Available (kg)</div><div class="value" id="kpiAvailKg">0</div></div></div>
+            <div class="card"><div class="card-body"><div class="text-muted">Sold (kg)</div><div class="value" id="kpiSoldKg">0</div></div></div>
+            <div class="card"><div class="card-body"><div class="text-muted">Earnings (₹)</div><div class="value" id="kpiEarnings">0</div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h6 class="mb-2">Recent Activity</h6>
+              <ul class="list-group" id="recentActivity"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UPLOAD NEW CROP (unchanged) -->
+    <section class="dashboard-card d-none" id="sec-upload">
+      <h4 class="text-success mb-3">Upload New Crop</h4>
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="mb-2">
+                <label class="form-label">Crop Name</label>
+                <input id="cropName" class="form-control" placeholder="e.g., Onion">
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Quantity (kg)</label>
+                <input id="cropQty" class="form-control" type="number" min="1" placeholder="e.g., 500">
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Price per kg (₹)</label>
+                <input id="cropPrice" class="form-control" type="number" min="1" step="0.01" placeholder="e.g., 18">
+              </div>
+                <div class="mb-3">
+                <label class="form-label">Crop Image</label>
+                <input type="file" id="cropImageFile" class="form-control" accept="image/*" capture="environment">
+                <img id="imgPreview" class="preview mt-2 d-none" alt="Image Preview">
+                <div class="form-text small">Large images are compressed before storage to avoid localStorage bloat.</div>
+              </div>
+              <div class="d-grid">
+                <button class="btn btn-success" onclick="uploadCrop()">Add Listing</button>
+              </div>
+              <div class="text-muted small mt-2">Traders will see this instantly on their dashboard (same origin).</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-body">
+              <h6 class="mb-2">Quick Tips</h6>
+              <ul class="small">
+                <li>Use clear crop names (e.g., “Organic Tomato Grade A”).</li>
+                <li>Competitive price helps you sell faster.</li>
+                <li>Share accurate photos to attract buyers.</li>
+              </ul>
+              <div class="alert alert-success small mb-0">
+                After uploading, go to <strong>Inventory Overview</strong> to edit, mark sold, or remove items.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVENTORY OVERVIEW -->
+    <section class="dashboard-card d-none" id="sec-inventory">
+      <h4 class="text-success mb-3">Inventory Overview</h4>
+      <div class="row g-2 mb-2">
+        <div class="col-md-4"><input id="invSearch" class="form-control" placeholder="Search crop..."></div>
+        <div class="col-md-3">
+          <select id="invFilter" class="form-select">
+            <option value="all">All</option>
+            <option value="Available">Available</option>
+            <option value="Sold Out">Sold Out</option>
+          </select>
+        </div>
+        <div class="col-md-5 text-end">
+          <button class="btn btn-outline-success btn-sm" onclick="exportInventoryExcel()">Export Excel</button>
+          <button class="btn btn-outline-primary btn-sm" onclick="exportInventoryPDF()">Export PDF</button>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light"><tr>
+            <th>#</th><th>Crop</th><th>Qty (kg)</th><th>Price/kg (₹)</th><th>Image</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="invTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="dashboard-card d-none" id="sec-orders">
+      <h4 class="text-success mb-3">Orders Management</h4>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light"><tr>
+            <th>#</th><th>Crop</th><th>Qty</th><th>Trader</th><th>Price/kg</th><th>Total (₹)</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="ordersTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- WEATHER -->
+    <section class="dashboard-card d-none" id="sec-weather">
+      <h4 class="text-success mb-3">Local Weather</h4>
+      <div class="row g-2 mb-2">
+        <div class="col-md-4"><input id="weatherCity" class="form-control" placeholder="City (or leave blank to use Profile)"></div>
+        <div class="col-md-4 d-flex gap-2">
+          <button class="btn btn-success" onclick="getWeather()">Get Weather</button>
+          <button class="btn btn-outline-secondary" onclick="locateAndWeather()">Use My Location</button>
+        </div>
+      </div>
+      <div id="weatherCard" class="card d-none">
+        <div class="card-body">
+          <h5 id="wCity" class="card-title"></h5>
+          <div id="wDetails" class="small"></div>
+        </div>
+      </div>
+      <div class="text-muted small mt-2">Powered by Open-Meteo. No API key required.</div>
+    </section>
+
+    <!-- MAP -->
+    <section class="dashboard-card d-none" id="sec-map">
+      <h4 class="text-success mb-3">🗺️ Maps: Farmers & Traders</h4>
+      <div class="row g-2 mb-2">
+        <div class="col-md-6"><input id="mapSearch" class="form-control" placeholder="Search address or mandi (e.g., Vashi APMC)"></div>
+        <div class="col-md-3 d-grid"><button class="btn btn-success" onclick="mapSearchPlace()">Search & Pin</button></div>
+        <div class="col-md-3 form-check d-flex align-items-center">
+          <input class="form-check-input me-2" type="checkbox" id="toggleTraders" onchange="toggleTraderMarkers()">
+          <label class="form-check-label" for="toggleTraders">Show registered traders</label>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div class="text-muted small mt-2">OpenStreetMap + Nominatim geocoding.</div>
+    </section>
+
+    <!-- PLANT SCANNER (NEW) -->
+    <section class="dashboard-card d-none" id="sec-plant">
+      <h4 class="text-success mb-3">Plant Scanner</h4>
+      <div class="plant-card">
+        <div>
+          <div class="card p-3">
+            <div class="camera-preview" id="cameraPreview">
+              <div class="text-muted small">No image yet — use camera or upload</div>
+            </div>
+
+            <div class="mt-3 scanner-controls d-flex flex-wrap gap-2">
+              <input type="file" id="plantFile" accept="image/*" capture="environment" class="form-control form-control-sm" style="max-width:240px;">
+              <button class="btn btn-outline-success btn-sm" id="startCameraBtn">Start Camera</button>
+              <button class="btn btn-success btn-sm" id="captureBtn">Capture</button>
+              <button class="btn btn-outline-secondary btn-sm" id="stopCameraBtn">Stop Camera</button>
+              <button class="btn btn-primary btn-sm ms-auto" id="scanBtn">Scan Plant</button>
+            </div>
+
+            <div class="mt-3 small text-muted">Tip: Photograph leaves close-up, with good light and a neutral background.</div>
+          </div>
+
+          <div class="mt-3 card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div><strong>Saved Reports</strong> <span class="tiny text-muted ms-2" id="savedCount">(0)</span></div>
+              <div><button class="btn btn-outline-primary btn-sm" onclick="exportReportsPDF()">Export Reports</button></div>
+            </div>
+            <div id="savedReports" class="mt-2"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card p-3">
+            <h5 id="scanTitle">Scan results</h5>
+            <div id="scanSummary" class="mt-2 small text-muted">No scan run yet.</div>
+
+            <div id="diseaseChips" class="mt-3"></div>
+
+            <div id="remediesWrap" class="mt-3"></div>
+
+            <div class="mt-3 d-flex gap-2">
+              <button class="btn btn-success" id="saveReportBtn">Save Report</button>
+              <button class="btn btn-outline-secondary" id="clearScanBtn">Clear</button>
+              <div id="scanSavedBadge" class="ms-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GOVT SCHEMES -->
+    <section class="dashboard-card d-none" id="sec-schemes">
+      <h4 class="text-success mb-3">Govt Schemes & Resources</h4>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-outline-success btn-sm" onclick="quickOpen('https://agmarknet.gov.in/')">Agmarknet</button>
+        <button class="btn btn-outline-success btn-sm" onclick="quickOpen('https://mausam.imd.gov.in/')">IMD Weather</button>
+        <button class="btn btn-outline-success btn-sm" onclick="quickOpen('https://pmkisan.gov.in/')">PM-KISAN</button>
+        <button class="btn btn-outline-success btn-sm" onclick="quickOpen('https://farmer.gov.in/')">farmer.gov.in</button>
+        <button class="btn btn-outline-success btn-sm" onclick="quickOpen('https://agricoop.gov.in/en')">Min. of Agriculture</button>
+      </div>
+    </section>
+
+    <!-- BROWSER -->
+    <section class="dashboard-card d-none" id="sec-browser">
+      <h4 class="text-success mb-3">🌐 Burauza</h4>
+      <ul class="nav nav-pills mb-2">
+        <li class="nav-item"><button class="nav-link active" id="tabWeb" onclick="switchWebMode('web')">Web</button></li>
+        <li class="nav-item"><button class="nav-link" id="tabSearch" onclick="switchWebMode('search')">Search</button></li>
+      </ul>
+
+      <div class="row g-2 browser-toolbar mb-2">
+        <div class="col-12 col-md-auto">
+          <div class="btn-group">
+            <button class="btn btn-outline-secondary btn-sm" onclick="miniBack()">⟵</button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="miniForward()">⟶</button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="miniReload()">⟳</button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="miniHome()">🏠</button>
+          </div>
+        </div>
+        <div class="col-12 col-md"><input id="browserUrl" class="form-control" placeholder="URL or search terms"/></div>
+        <div class="col-12 col-md-auto d-flex gap-2">
+          <button class="btn btn-success btn-sm" onclick="loadSite()">Go</button>
+          <button class="btn btn-outline-success btn-sm" onclick="openNewTab()">Open in New Tab</button>
+        </div>
+      </div>
+
+      <div id="browserAlert" class="alert alert-warning py-2 px-3 d-none small">
+        Site blocked from embedding. Use <a href="#" onclick="openNewTab()">Open in New Tab</a>.
+      </div>
+
+      <iframe id="browserFrame" src="https://www.google.com" width="100%" height="420"
+              style="border:1px solid #ced4da; border-radius:10px;"
+              sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+    </section>
+
+    <!-- CHAT & CALLS -->
+    <section class="dashboard-card d-none" id="sec-chat">
+      <h4 class="text-success mb-3">Chat & Calls with Traders</h4>
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-body">
+              <h6 class="mb-2">Chat</h6>
+              <div class="mb-2">
+                <select id="chatPeer" class="form-select"></select>
+              </div>
+              <div id="chatBox"></div>
+              <div class="input-group mt-2">
+                <input id="chatMsg" class="form-control" placeholder="Type a message...">
+                <button class="btn btn-success" onclick="sendChat()">Send</button>
+              </div>
+              <div class="form-text">Works instantly if both dashboards are open on same origin (BroadcastChannel). Persists in local storage.</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="card h-100">
+            <div class="card-body">
+              <h6 class="mb-2">Voice Call (WebRTC, peer-to-peer)</h6>
+              <div class="call-grid">
+                <div>
+                  <div class="mb-2"><video id="localVideo" autoplay playsinline muted></video></div>
+                  <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="startCall()">Start Call (Offer)</button>
+                    <button class="btn btn-outline-danger" onclick="hangup()">Hang Up</button>
+                  </div>
+                </div>
+                <div>
+                  <div class="mb-2"><video id="remoteVideo" autoplay playsinline></video></div>
+                  <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success" onclick="answerCall()">Answer (when Offer arrives)</button>
+                  </div>
+                </div>
+              </div>
+              <hr>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label">Manual Offer/Answer (copy this)</label>
+                  <textarea id="sdpLocal" class="form-control sdp" placeholder="Local SDP (copy me)"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Paste Remote SDP then click “Apply Remote”</label>
+                  <textarea id="sdpRemote" class="form-control sdp" placeholder="Paste remote SDP here"></textarea>
+                  <div class="d-grid mt-2"><button class="btn btn-secondary" onclick="applyRemote()">Apply Remote</button></div>
+                </div>
+              </div>
+              <div class="form-text mt-2">
+                Auto-signaling works when both sides are open on the same origin (uses BroadcastChannel <code>ftc_call</code>).
+                For cross-device, exchange the Offer/Answer text via any messenger and press “Apply Remote”.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="dashboard-card d-none" id="sec-notifications">
+      <h4 class="text-success mb-3">Notifications</h4>
+      <ul class="list-group" id="notifList"></ul>
+      <div class="mt-2 d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" onclick="seedNotifications()">Seed Demo Alerts</button>
+        <button class="btn btn-outline-danger btn-sm" onclick="clearNotifications()">Clear</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- PROFILE MODAL -->
+  <div class="modal fade" id="profileModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form class="modal-content" onsubmit="event.preventDefault(); saveProfile(); bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Profile</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label">Name</label><input id="m_profName" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Mobile</label><input id="m_profMobile" class="form-control" maxlength="10"></div>
+          <div class="mb-2"><label class="form-label">Location</label><input id="m_profLocation" class="form-control"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-success" type="submit">Save</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Bootstrap bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+  /*****************
+   * SAFE HELPERS & STATE (unchanged)
+   *****************/
+  function safeParse(s, fallback){ try{ return JSON.parse(s||'null') || fallback; }catch(e){ return fallback; } }
+  function uid(prefix='id'){ return prefix + '_' + Date.now().toString(36) + '_' + Math.floor(Math.random()*10000).toString(36); }
+  function escapeText(t){ const d = document.createTextNode(t||''); const sp = document.createElement('span'); sp.appendChild(d); return sp.innerHTML; }
+
+  let notifs = safeParse(localStorage.getItem("notifications"), []);
+  let farmerProducts = safeParse(localStorage.getItem("farmerProducts"), []);
+  let farmerOrders = safeParse(localStorage.getItem("farmerOrders"), []);
+  let plantReports = safeParse(localStorage.getItem("plantReports"), []);
+
+  const bellBadge = document.getElementById('bellBadge');
+  const bellBtn = document.getElementById('bellBtn');
+
+  // add plant to existing sections array
+  const sections = ["overview","upload","inventory","orders","weather","map","plant","schemes","browser","chat","notifications"];
+  function openSection(name){
+    const off = bootstrap.Offcanvas.getInstance(document.getElementById('mainMenu'));
+    if (off) off.hide();
+    sections.forEach(s => {
+      const el = document.getElementById('sec-'+s);
+      if(el) el.classList.toggle('d-none', s!==name);
+    });
+    if (name==="inventory") renderInventory();
+    if (name==="orders") renderOrders();
+    if (name==="notifications") renderNotifs();
+    if (name==="map") setTimeout(()=> map && map.invalidateSize(), 100);
+    if (name==="plant") setTimeout(()=> refreshSavedReports(), 150);
+  }
+  openSection("overview");
+
+  /*****************
+   * PROFILE (unchanged)
+   *****************/
+  function loadProfile(){
+    const p = safeParse(localStorage.getItem("currentFarmerProfile"), {});
+    document.getElementById('profName').value = p.name || "";
+    document.getElementById('profMobile').value = p.mobile || "";
+    document.getElementById('profLocation').value = p.location || "";
+    document.getElementById('m_profName').value = p.name || "";
+    document.getElementById('m_profMobile').value = p.mobile || "";
+    document.getElementById('m_profLocation').value = p.location || "";
+    setAvatar(p.name);
+    document.getElementById('ddName').textContent = p.name || "Farmer";
+
+    // register into users list for map discovery (avoid duplicates by mobile)
+    if (p.name && p.location && p.mobile){
+      geocode(p.location).then(g=>{
+        if(!g) return;
+        const users = safeParse(localStorage.getItem("users"), []);
+        const filtered = users.filter(u => !(u.role==="farmer" && u.mobile===p.mobile));
+        filtered.push({ id: uid('user'), role:"farmer", fullName:p.name, mobile:p.mobile, lat:g.lat, lon:g.lon });
+        localStorage.setItem("users", JSON.stringify(filtered));
+      });
+    }
+  }
+  function setAvatar(name){
+    const initials = (name||"F").trim().split(/\s+/).map(s=>s[0]?.toUpperCase()).slice(0,2).join('') || 'F';
+    document.getElementById('avatarInitials').textContent = initials;
+  }
+  function saveProfile(){
+    const p = {
+      name: (document.getElementById('m_profName').value || document.getElementById('profName').value).trim(),
+      mobile: (document.getElementById('m_profMobile').value || document.getElementById('profMobile').value).trim(),
+      location: (document.getElementById('m_profLocation').value || document.getElementById('profLocation').value).trim()
+    };
+    localStorage.setItem("currentFarmerProfile", JSON.stringify(p));
+    loadProfile();
+    showToast("Profile saved.");
+    loadPeers();
+  }
+  document.getElementById('logoutBtn').addEventListener('click', ()=> window.location.href="login.html");
+
+  /*****************
+   * KPIs & RECENT (unchanged)
+   *****************/
+  function updateKPIs(){
+    const listings = farmerProducts.length;
+    const availKg = farmerProducts.filter(p=>p.status==="Available").reduce((s,p)=>s+Number(p.quantity||0),0);
+    const soldKg = farmerProducts.filter(p=>p.status==="Sold Out").reduce((s,p)=>s+Number(p.quantity||0),0);
+    const earnings = farmerOrders.filter(o=>o.status==="Completed").reduce((s,o)=>s + (Number(o.qty||0)*Number(o.price||0)), 0);
+    document.getElementById('kpiListings').textContent = String(listings);
+    document.getElementById('kpiAvailKg').textContent = String(availKg);
+    document.getElementById('kpiSoldKg').textContent = String(soldKg);
+    document.getElementById('kpiEarnings').textContent = String(earnings.toFixed(2));
+    updateBell();
+    renderRecent();
+  }
+  function renderRecent(){
+    const ul = document.getElementById('recentActivity');
+    if(!ul) return;
+    ul.innerHTML = "";
+    const list = safeParse(localStorage.getItem("notifications"), []).slice(0,8);
+    if(!list.length){ ul.innerHTML = `<li class="list-group-item text-muted">No activity yet.</li>`; return; }
+    list.forEach(n=>{
+      const li = document.createElement('li');
+      li.className = "list-group-item d-flex justify-content-between align-items-center";
+      const span = document.createElement('span'); span.textContent = n.text;
+      const small = document.createElement('small'); small.className='text-muted'; small.textContent = new Date(n.ts).toLocaleString();
+      li.appendChild(span); li.appendChild(small);
+      ul.appendChild(li);
+    });
+  }
+
+  /*****************
+   * UPLOAD (unchanged)
+   *****************/
+  const cropImageFile = document.getElementById('cropImageFile');
+  const imgPreview = document.getElementById('imgPreview');
+  let selectedImageBase64 = null;
+
+  async function compressImage(file, maxWidth=1024, quality=0.8){
+    return new Promise((resolve, reject)=>{
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (ev)=>{ img.src = ev.target.result; };
+      reader.onerror = reject;
+      img.onload = ()=>{
+        try{
+          const canvas = document.createElement('canvas');
+          const scale = Math.min(1, maxWidth / img.width);
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl);
+        }catch(e){ reject(e); }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if(cropImageFile){
+    cropImageFile.addEventListener('change', async (event)=>{
+      const file = event.target.files[0];
+      if (file) {
+        try{
+          const compressed = await compressImage(file, 1024, 0.8);
+          imgPreview.src = compressed;
+          imgPreview.classList.remove('d-none');
+          selectedImageBase64 = compressed;
+        }catch(e){
+          const reader = new FileReader();
+          reader.onload = (e) =>{ imgPreview.src = e.target.result; imgPreview.classList.remove('d-none'); selectedImageBase64 = e.target.result; };
+          reader.readAsDataURL(file);
+        }
+      } else {
+        imgPreview.classList.add('d-none');
+        imgPreview.src = "";
+        selectedImageBase64 = null;
+      }
+    });
+  }
+
+  function uploadCrop(){
+    const cropName = (document.getElementById('cropName')||{}).value?.trim();
+    const quantity = Number((document.getElementById('cropQty')||{}).value);
+    const price = Number((document.getElementById('cropPrice')||{}).value);
+    const imageUrl = selectedImageBase64;
+
+    if (!cropName || !quantity || !price){ alert("Please fill Crop, Quantity and Price."); return; }
+    if (imageUrl && imageUrl.length > 2_000_000){
+      if(!confirm('Image is large and may fill browser storage. Continue?')) return;
+    }
+    const item = { id: uid('prod'), cropName, quantity, price, status:"Available", imageUrl, createdAt:new Date().toISOString() };
+    farmerProducts.push(item);
+    localStorage.setItem("farmerProducts", JSON.stringify(farmerProducts));
+    addNotif(`New listing added: ${cropName} (${quantity} kg @ ₹${price}/kg)`);
+
+    // reset form
+    document.getElementById('cropName').value = "";
+    document.getElementById('cropQty').value = "";
+    document.getElementById('cropPrice').value = "";
+    if(cropImageFile) cropImageFile.value = "";
+    if(imgPreview){ imgPreview.classList.add('d-none'); imgPreview.src = ""; }
+    selectedImageBase64 = null;
+
+    updateKPIs();
+    renderInventory();
+  }
+
+  /*****************
+   * INVENTORY (unchanged)
+   *****************/
+  const invTable = document.getElementById('invTable');
+  const invSearch = document.getElementById('invSearch');
+  const invFilter = document.getElementById('invFilter');
+
+  function renderInventory(){
+    if(!invTable) return;
+    const term = (invSearch?.value||"").toLowerCase().trim();
+    const filter = invFilter?.value || 'all';
+    const rows = farmerProducts
+      .map((p)=>({ ...p }))
+      .filter(p => (filter==='all' ? true : p.status===filter))
+      .filter(p => term==="" ? true : (p.cropName||"").toLowerCase().includes(term));
+    invTable.innerHTML = "";
+    rows.forEach((p, idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td contenteditable="true" onblur="editField('${p.id}', 'cropName', this.textContent)">${escapeText(p.cropName||'')}</td>
+        <td contenteditable="true" onblur="editField('${p.id}', 'quantity', this.textContent)">${p.quantity}</td>
+        <td contenteditable="true" onblur="editField('${p.id}', 'price', this.textContent)">${p.price}</td>
+        <td>${p.imageUrl ? `<img src="${p.imageUrl}" width="60" height="45" style="object-fit:cover;border-radius:6px;">` : '—'}</td>
+        <td><span class="badge ${p.status==='Available'?'bg-success':'bg-secondary'}">${p.status}</span></td>
+        <td class="d-flex gap-1">
+          ${p.status==='Available'?`<button class="btn btn-sm btn-outline-success" onclick="markSold('${p.id}')">Mark Sold</button>`:
+          `<button class="btn btn-sm btn-outline-secondary" onclick="markAvailable('${p.id}')">Mark Available</button>`}
+          <button class="btn btn-sm btn-danger" onclick="deleteListing('${p.id}')">Delete</button>
+        </td>`;
+      invTable.appendChild(tr);
+    });
+    updateKPIs();
+  }
+  if(invSearch) invSearch.addEventListener('input', renderInventory);
+  if(invFilter) invFilter.addEventListener('change', renderInventory);
+
+  function editField(id, key, val){
+    const idx = farmerProducts.findIndex(p=>p.id===id);
+    if (idx===-1) return;
+    if (key==="quantity" || key==="price") val = Number(val);
+    farmerProducts[idx][key] = val;
+    localStorage.setItem("farmerProducts", JSON.stringify(farmerProducts));
+    renderInventory();
+    updateKPIs();
+  }
+  function markSold(id){
+    const idx = farmerProducts.findIndex(p=>p.id===id);
+    if (idx===-1) return;
+    farmerProducts[idx].status = "Sold Out";
+    localStorage.setItem("farmerProducts", JSON.stringify(farmerProducts));
+    renderInventory(); updateKPIs();
+    addNotif(`Marked sold: ${farmerProducts[idx].cropName}`);
+  }
+  function markAvailable(id){
+    const idx = farmerProducts.findIndex(p=>p.id===id);
+    if (idx===-1) return;
+    farmerProducts[idx].status = "Available";
+    localStorage.setItem("farmerProducts", JSON.stringify(farmerProducts));
+    renderInventory(); updateKPIs();
+    addNotif(`Marked available: ${farmerProducts[idx].cropName}`);
+  }
+  function deleteListing(id){
+    if(!confirm("Delete this listing?")) return;
+    const idx = farmerProducts.findIndex(p=>p.id===id);
+    if (idx===-1) return;
+    const item = farmerProducts[idx];
+    farmerProducts.splice(idx,1);
+    localStorage.setItem("farmerProducts", JSON.stringify(farmerProducts));
+    renderInventory(); updateKPIs();
+    addNotif(`Deleted listing: ${item.cropName}`, "warning");
+  }
+  function exportInventoryExcel(){
+    const data = [["Crop","Qty (kg)","Price (₹)","Status"], ...farmerProducts.map(p=>[p.cropName,p.quantity,p.price,p.status])];
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, "Inventory");
+    XLSX.writeFile(wb, "farmer_inventory.xlsx");
+  }
+  async function exportInventoryPDF(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Farmer Inventory", 14, 18);
+    const rows = farmerProducts.map((p,i)=>[i+1,p.cropName,String(p.quantity),String(p.price),p.status]);
+    doc.autoTable({ head:[["#","Crop","Qty","Price","Status"]], body: rows, startY:24 });
+    doc.save("farmer_inventory.pdf");
+  }
+
+  /*****************
+   * ORDERS (unchanged)
+   *****************/
+  function renderOrders(){
+    const tb = document.getElementById('ordersTable');
+    if(!tb) return;
+    tb.innerHTML = "";
+    farmerOrders.forEach((o,i)=>{
+      const total = (Number(o.qty||0)*Number(o.price||0)).toFixed(2);
+      let statusBadgeClass = 'bg-secondary';
+      if (o.status === 'Pending') statusBadgeClass = 'bg-warning text-dark';
+      else if (o.status === 'Accepted') statusBadgeClass = 'bg-info text-dark';
+      else if (o.status === 'Declined') statusBadgeClass = 'bg-danger';
+      else if (o.status === 'Completed') statusBadgeClass = 'bg-success';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${escapeText(o.crop)}</td>
+        <td>${o.qty}</td>
+        <td>${escapeText(o.trader || '—')}</td>
+        <td>₹${o.price}</td>
+        <td>₹${total}</td>
+        <td><span class="badge ${statusBadgeClass}">${o.status}</span></td>
+        <td class="d-flex gap-1">
+          ${o.status==='Pending'?`
+            <button class="btn btn-sm btn-success" onclick="acceptOrder('${o.id}')">Accept</button>
+            <button class="btn btn-sm btn-warning" onclick="declineOrder('${o.id}')">Decline</button>
+          `:''}
+          ${o.status==='Accepted'?`<button class="btn btn-sm btn-outline-success" onclick="completeOrder('${o.id}')">Mark Completed</button>`:''}
+          <button class="btn btn-sm btn-danger" onclick="deleteOrder('${o.id}')">Delete</button>
+        </td>`;
+      tb.appendChild(tr);
+    });
+    updateKPIs();
+  }
+  function persistFarmerOrders(){
+    localStorage.setItem("farmerOrders", JSON.stringify(farmerOrders));
+    renderOrders();
+    updateKPIs();
+  }
+  function acceptOrder(id){
+    const i = farmerOrders.findIndex(o=>o.id===id); if(i===-1) return;
+    farmerOrders[i].status = "Accepted";
+    persistFarmerOrders();
+    addNotif(`Order for ${farmerOrders[i].crop} accepted.`, "success");
+    const tOrders = safeParse(localStorage.getItem("traderOrders"), []);
+    const tIdx = tOrders.findIndex(t=>t.id===farmerOrders[i].mirrorId);
+    if (tIdx!==-1){ tOrders[tIdx].status = "Accepted"; localStorage.setItem("traderOrders", JSON.stringify(tOrders)); }
+  }
+  function declineOrder(id){
+    const i = farmerOrders.findIndex(o=>o.id===id); if(i===-1) return;
+    farmerOrders[i].status = "Declined";
+    persistFarmerOrders();
+    addNotif(`Order for ${farmerOrders[i].crop} declined.`, "warning");
+    const tOrders = safeParse(localStorage.getItem("traderOrders"), []);
+    const tIdx = tOrders.findIndex(t=>t.id===farmerOrders[i].mirrorId);
+    if (tIdx!==-1){ tOrders[tIdx].status = "Declined"; localStorage.setItem("traderOrders", JSON.stringify(tOrders)); }
+  }
+  function completeOrder(id){
+    const i = farmerOrders.findIndex(o=>o.id===id); if(i===-1) return;
+    farmerOrders[i].status = "Completed";
+    persistFarmerOrders();
+    addNotif(`Order completed: ${farmerOrders[i].crop}`, "success");
+    const tOrders = safeParse(localStorage.getItem("traderOrders"), []);
+    const tIdx = tOrders.findIndex(t=>t.id===farmerOrders[i].mirrorId);
+    if (tIdx!==-1){ tOrders[tIdx].status = "Completed"; localStorage.setItem("traderOrders", JSON.stringify(tOrders)); }
+  }
+  function deleteOrder(id){
+    if(!confirm("Delete this order?")) return;
+    const i = farmerOrders.findIndex(o=>o.id===id); if(i===-1) return;
+    const o = farmerOrders[i];
+    farmerOrders.splice(i,1);
+    persistFarmerOrders();
+    addNotif(`Order deleted: ${o.crop}`, "warning");
+    const tOrders = safeParse(localStorage.getItem("traderOrders"), []);
+    const tIdx = tOrders.findIndex(t=>t.id===o.mirrorId);
+    if (tIdx!==-1){ tOrders.splice(tIdx,1); localStorage.setItem("traderOrders", JSON.stringify(tOrders)); }
+  }
+
+  /*****************
+   * NOTIFICATIONS (unchanged)
+   *****************/
+  function addNotif(text, level="success"){
+    notifs.unshift({ id: uid('n'), text, level, ts:new Date().toISOString(), read:false });
+    if(notifs.length>200) notifs = notifs.slice(0,200);
+    persistNotifs();
+    showToast(text, level==="warning"?"warning":"success");
+  }
+  function persistNotifs(){
+    localStorage.setItem("notifications", JSON.stringify(notifs));
+    renderNotifs();
+    updateBell();
+    renderRecent();
+  }
+  function renderNotifs(){
+    const ul = document.getElementById('notifList');
+    if(!ul) return;
+    ul.innerHTML = "";
+    if(!notifs.length){ ul.innerHTML = `<li class="list-group-item text-muted">No notifications.</li>`; return; }
+    notifs.slice(0,20).forEach((n,idx)=>{
+      const li = document.createElement('li');
+      li.className = "list-group-item d-flex justify-content-between align-items-center";
+      const left = document.createElement('span'); left.innerHTML = (n.read? '': '<strong class="me-1">•</strong>') + escapeText(n.text);
+      const right = document.createElement('span'); right.className = 'd-flex align-items-center gap-2';
+      const small = document.createElement('small'); small.className='text-muted'; small.textContent = new Date(n.ts).toLocaleString();
+      const btn = document.createElement('button'); btn.className = 'btn btn-sm ' + (n.read? 'btn-outline-secondary':'btn-outline-success'); btn.textContent = n.read? 'Unread':'Mark read';
+      btn.addEventListener('click', ()=>{ toggleNotifRead(idx); });
+      right.appendChild(small); right.appendChild(btn);
+      li.appendChild(left); li.appendChild(right);
+      ul.appendChild(li);
+    });
+  }
+  function toggleNotifRead(i){
+    if(!notifs[i]) return;
+    notifs[i].read = !notifs[i].read;
+    persistNotifs();
+  }
+  function clearNotifications(){ notifs = []; persistNotifs(); }
+  function seedNotifications(){
+    ["Welcome to Farmer Dashboard!","Upload your first crop.","Check Orders for new requests."].forEach((t,i)=>notifs.unshift({id:uid('n'), text:t, level:"success", ts:new Date(Date.now()-i*600000).toISOString(), read:false}));
+    if(notifs.length>200) notifs = notifs.slice(0,200);
+    persistNotifs();
+  }
+  function updateBell(){
+    const unread = notifs.filter(n=>!n.read).length;
+    bellBadge.textContent = String(unread);
+    bellBadge.classList.toggle('d-none', unread===0);
+  }
+  bellBtn.addEventListener('click', ()=>openSection('notifications'));
+
+  /*****************
+   * WEATHER (unchanged)
+   *****************/
+  async function getWeather(){
+    const city = document.getElementById('weatherCity').value.trim();
+    if (!city){
+      const p = safeParse(localStorage.getItem("currentFarmerProfile"), {});
+      if (p.location) { await weatherByPlace(p.location); return; }
+      alert("Enter a city or set your profile location."); return;
+    }
+    await weatherByPlace(city);
+  }
+  async function weatherByPlace(place){
+    const geo = await geocode(place);
+    if(!geo){ alert("Place not found."); return; }
+    await fetchWeather(geo.lat, geo.lon, geo.display_name);
+  }
+  function locateAndWeather(){
+    if(!navigator.geolocation){ alert("Geolocation not supported."); return; }
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      await fetchWeather(pos.coords.latitude, pos.coords.longitude, "My Location");
+    }, ()=>alert("Unable to get your location."));
+  }
+  async function fetchWeather(lat, lon, label){
+    try{
+      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&timezone=auto`);
+      const j = await r.json();
+      const c = j.current || {};
+      document.getElementById('wCity').textContent = label;
+      document.getElementById('wDetails').innerHTML = `
+        <div>Temperature: <strong>${c.temperature_2m ?? "–"}°C</strong></div>
+        <div>Humidity: <strong>${c.relative_humidity_2m ?? "–"}%</strong></div>
+        <div>Wind: <strong>${c.wind_speed_10m ?? "–"} km/h</strong></div>`;
+      document.getElementById('weatherCard').classList.remove('d-none');
+    }catch(e){ alert("Weather fetch failed."); }
+  }
+
+  /*****************
+   * MAPS (unchanged)
+   *****************/
+  let map, searchMarker, traderMarkers=[];
+  function initMap(){
+    map = L.map('map').setView([22.9734,78.6569],5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(map);
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const {latitude, longitude} = pos.coords;
+        map.setView([latitude, longitude], 12);
+        L.marker([latitude, longitude]).addTo(map).bindPopup("You are here").openPopup();
+      }, ()=>{});
+    }
+    const p = safeParse(localStorage.getItem("currentFarmerProfile"), {});
+    if (p.location){
+      geocode(p.location).then(g=>{
+        if(g) L.marker([g.lat,g.lon]).addTo(map).bindPopup("Profile Location<br>"+g.display_name);
+      });
+    }
+  }
+  async function geocode(q){
+    try{
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language':'en' } });
+      const j = await r.json();
+      if(!j || !j.length) return null;
+      const p = j[0];
+      return { lat: parseFloat(p.lat), lon: parseFloat(p.lon), display_name: p.display_name };
+    }catch(e){ return null; }
+  }
+  async function mapSearchPlace(){
+    const q = document.getElementById('mapSearch').value.trim();
+    if(!q){ alert("Enter a place to search."); return; }
+    const g = await geocode(q);
+    if(!g){ alert("Place not found."); return; }
+    if(searchMarker) map.removeLayer(searchMarker);
+    searchMarker = L.marker([g.lat,g.lon]).addTo(map).bindPopup(g.display_name);
+    map.setView([g.lat,g.lon],14);
+  }
+  function toggleTraderMarkers(){
+    traderMarkers.forEach(m=>map.removeLayer(m));
+    traderMarkers = [];
+    if (!document.getElementById('toggleTraders').checked) return;
+    const users = safeParse(localStorage.getItem("users"), []).filter(u=>u.role==="trader");
+    users.forEach(u=>{
+      if(u.lat && u.lon){
+        const mk = L.marker([u.lat, u.lon]).addTo(map).bindPopup(`${escapeText(u.fullName||'Trader')}<br/>${escapeText(u.mobile||'')}`);
+        traderMarkers.push(mk);
+      }
+    });
+    if(!traderMarkers.length) showToast("No trader locations with coordinates yet.", "warning");
+  }
+
+  /*****************
+   * EMBEDDED BROWSER (unchanged)
+   *****************/
+  const HOME_URL = "https://www.google.com/";
+  const frame = document.getElementById('browserFrame');
+  const urlInput = document.getElementById('browserUrl');
+  const alertBox = document.getElementById('browserAlert');
+  const tabWeb = document.getElementById('tabWeb');
+  const tabSearch = document.getElementById('tabSearch');
+  let webMode = "web";
+  const hist = { stack:[HOME_URL], index:0 };
+  let loadTimer=null, currentLoadingUrl="";
+
+  function switchWebMode(mode){
+    webMode=mode;
+    tabWeb.classList.toggle('active', mode==='web');
+    tabSearch.classList.toggle('active', mode==='search');
+    urlInput.placeholder = mode==='web' ? "Type a URL (https://...)" : "Search the web (e.g., crop prices)";
+    if(mode==='search') urlInput.focus();
+  }
+  function isLikelyDomain(s){ return /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i.test(s); }
+  function normalizeUrl(input){
+    const s = input.trim();
+    if(!s) return HOME_URL;
+    if (webMode==='search' || (!s.includes('.') && !s.includes('/'))) return "https://www.google.com/search?q="+encodeURIComponent(s);
+    if (/^[a-zA-Z]+:\/\//.test(s)) return s;
+    if (/^\d{1,3}(\.\d{1,3}){3}(?::\d{1,5})?$/.test(s)) return "http://"+s;
+    if (isLikelyDomain(s)) return "https://"+s;
+    return "https://www.google.com/search?q="+encodeURIComponent(s);
+  }
+  function setFrameSrc(url){
+    clearTimeout(loadTimer);
+    if(alertBox) alertBox.classList.add('d-none'); if(frame) frame.classList.remove('loading');
+    if(frame) frame.src = url; currentLoadingUrl = url; if(frame) frame.classList.add('loading');
+    loadTimer = setTimeout(()=>{
+      try{
+        if (frame && frame.src===currentLoadingUrl && frame.contentWindow.location.href==='about:blank'){
+          if(alertBox) alertBox.classList.remove('d-none'); showToast("Page may block embedding. Use 'Open in New Tab'.", "warning");
+        }
+      }catch(e){}
+      if(frame) frame.classList.remove('loading');
+    }, 3500);
+    if(frame) frame.onload = ()=>{ clearTimeout(loadTimer); if(alertBox) alertBox.classList.add('d-none'); if(frame) frame.classList.remove('loading');
+        try{ if(frame.contentWindow.location.href!=='about:blank') urlInput.value = frame.contentWindow.location.href; }catch(e){} };
+    if(frame) frame.onerror = ()=>{ clearTimeout(loadTimer); if(alertBox) alertBox.classList.remove('d-none'); if(frame) frame.classList.remove('loading'); };
+  }
+  function pushToHistory(url){
+    if (hist.stack[hist.index] !== url){ hist.stack = hist.stack.slice(0, hist.index+1); hist.stack.push(url); hist.index++; }
+  }
+  function loadSite(){ const url = normalizeUrl(urlInput.value); pushToHistory(url); setFrameSrc(url); }
+  function openNewTab(){ const u = hist.stack[hist.index] || HOME_URL; window.open(u, "_blank"); }
+  function miniHome(){ urlInput.value = HOME_URL; pushToHistory(HOME_URL); setFrameSrc(HOME_URL); }
+  function miniBack(){ if (hist.index>0){ hist.index--; const url = hist.stack[hist.index]; urlInput.value=url; setFrameSrc(url);} }
+  function miniForward(){ if (hist.index<hist.stack.length-1){ hist.index++; const url = hist.stack[hist.index]; urlInput.value=url; setFrameSrc(url);} }
+  function miniReload(){ const url = hist.stack[hist.index] || HOME_URL; setFrameSrc(url); }
+  urlInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); loadSite(); } });
+  function quickOpen(url){ openSection('browser'); urlInput.value = url; pushToHistory(url); setFrameSrc(url); }
+
+  /*****************
+   * CHAT (unchanged)
+   *****************/
+  const chatBox = document.getElementById('chatBox');
+  const chatMsg = document.getElementById('chatMsg');
+  const chatPeer = document.getElementById('chatPeer');
+  const CHAT_CHANNEL = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('ftc_chat') : null;
+
+  function loadPeers(){
+    const traders = (safeParse(localStorage.getItem("users"), [])).filter(u=>u.role==="trader");
+    if(!chatPeer) return;
+    chatPeer.innerHTML = "";
+    if (!traders.length) chatPeer.innerHTML = `<option value="">No traders registered</option>`;
+    traders.forEach(t=>{
+      const opt = document.createElement('option');
+      opt.value = t.mobile || t.fullName || "trader";
+      opt.textContent = `${t.fullName||'Trader'} ${t.mobile?('('+t.mobile+')'):''}`;
+      chatPeer.appendChild(opt);
+    });
+  }
+  function chatKey(room){ return `chat_${String(room||'').replace(/\s+/g,'_')}`; }
+  function currentRoom(){ return chatPeer?.value || "trader"; }
+  function renderChat(){
+    const list = safeParse(localStorage.getItem(chatKey(currentRoom())), []);
+    if(!chatBox) return;
+    chatBox.innerHTML = "";
+    list.slice(-100).forEach(m=>{
+      const wrap = document.createElement('div');
+      wrap.className = "msg "+(m.role==="me"?"me":"");
+      const bubble = document.createElement('div'); bubble.className='bubble';
+      const t = document.createElement('div'); t.textContent = m.text;
+      const tiny = document.createElement('div'); tiny.className='tiny mt-1'; tiny.textContent = new Date(m.ts).toLocaleTimeString();
+      bubble.appendChild(t); bubble.appendChild(tiny); wrap.appendChild(bubble);
+      chatBox.appendChild(wrap);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+  function sendChat(){
+    const text = chatMsg.value.trim();
+    if(!text) return;
+    const k = chatKey(currentRoom());
+    const list = safeParse(localStorage.getItem(k), []);
+    const msg = { role:"me", text, ts: Date.now() };
+    list.push(msg);
+    localStorage.setItem(k, JSON.stringify(list));
+    renderChat();
+    chatMsg.value="";
+    addNotif(`Message sent to ${currentRoom()}`);
+    if(CHAT_CHANNEL) CHAT_CHANNEL.postMessage({ room: currentRoom(), text, ts: msg.ts, from: "farmer" });
+  }
+  if(CHAT_CHANNEL) {
+    CHAT_CHANNEL.onmessage = (ev)=>{
+      const { room, text, ts } = ev.data || {};
+      if (!room || !text) return;
+      const k = chatKey(room);
+      const list = safeParse(localStorage.getItem(k), []);
+      list.push({ role:"peer", text, ts: ts||Date.now() });
+      localStorage.setItem(k, JSON.stringify(list));
+      renderChat();
+      addNotif(`New message from ${room}`, "success");
+    };
+  }
+  chatPeer?.addEventListener('change', renderChat);
+  chatMsg?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+
+  /*****************
+   * CALLS (unchanged)
+   *****************/
+  const CALL_CHANNEL = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('ftc_call') : null;
+  let pc = null, localStream=null, remoteStream=null;
+  const pcConfig = { iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }] };
+  const localVideo = document.getElementById('localVideo');
+  const remoteVideo = document.getElementById('remoteVideo');
+  const sdpLocal = document.getElementById('sdpLocal');
+  const sdpRemote = document.getElementById('sdpRemote');
+
+  async function ensureStreams(){
+    if (localStream) return;
+    localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
+    if(localVideo) localVideo.srcObject = localStream;
+  }
+  function newPC(){
+    if (pc) pc.close();
+    pc = new RTCPeerConnection(pcConfig);
+    remoteStream = new MediaStream();
+    if(remoteVideo) remoteVideo.srcObject = remoteStream;
+    pc.ontrack = (e)=> e.streams[0].getTracks().forEach(t=> remoteStream.addTrack(t));
+    pc.onicecandidate = (e)=> { if (e.candidate && CALL_CHANNEL) CALL_CHANNEL.postMessage({ type:"ice", candidate: e.candidate }); };
+    pc.onconnectionstatechange = ()=> {
+      if (pc.connectionState === "connected") showToast("Call connected");
+      if (pc.connectionState === "failed") showToast("Call failed", "warning");
+      if (pc.connectionState === "disconnected" || pc.connectionState === "closed") showToast("Call ended", "warning");
+    };
+  }
+  async function startCall(){
+    await ensureStreams();
+    newPC();
+    localStream.getTracks().forEach(t=> pc.addTrack(t, localStream));
+    try{
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      if(sdpLocal) sdpLocal.value = JSON.stringify(pc.localDescription);
+      if(CALL_CHANNEL) CALL_CHANNEL.postMessage({ type:"offer", sdp: pc.localDescription });
+      addNotif("Outgoing call…");
+    }catch(e){ console.error(e); }
+  }
+  async function answerCall(){
+    await ensureStreams();
+    if (!pc) newPC();
+    localStream.getTracks().forEach(t=> pc.addTrack(t, localStream));
+    await applyRemote();
+    if (pc.signalingState === "have-remote-offer"){
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      if(sdpLocal) sdpLocal.value = JSON.stringify(pc.localDescription);
+      if(CALL_CHANNEL) CALL_CHANNEL.postMessage({ type:"answer", sdp: pc.localDescription });
+      addNotif("Answered call");
+    } else {
+      showToast("No remote offer yet. Wait for Offer, paste it, then Answer.", "warning");
+    }
+  }
+  async function applyRemote(){
+    if (!pc) newPC();
+    let desc;
+    try{ desc = JSON.parse(sdpRemote.value.trim()); }catch(e){ desc = null; }
+    if (!desc){ showToast("Paste a valid SDP first.", "warning"); return; }
+    await pc.setRemoteDescription(desc);
+    showToast(`Applied remote ${desc.type.toUpperCase()}`);
+  }
+  function hangup(){
+    try{ pc && pc.close(); }catch(e){}
+    pc=null;
+    if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+    showToast("Call ended", "warning");
+  }
+  if(CALL_CHANNEL){
+    CALL_CHANNEL.onmessage = async (ev)=>{
+      const msg = ev.data || {};
+      if (!msg.type) return;
+      if (msg.type === "offer"){
+        if(sdpRemote) sdpRemote.value = JSON.stringify(msg.sdp);
+        addNotif("Incoming call — press Answer");
+      } else if (msg.type === "answer"){
+        if(sdpRemote) sdpRemote.value = JSON.stringify(msg.sdp);
+        if (pc && pc.signalingState === "have-local-offer"){
+          await pc.setRemoteDescription(msg.sdp);
+          addNotif("Peer answered — connecting...");
+        }
+      } else if (msg.type === "ice"){
+        try{ if (pc && msg.candidate) await pc.addIceCandidate(msg.candidate); }catch(e){}
+      }
+    };
+  }
+
+  /*****************
+   * TOASTS (unchanged)
+   *****************/
+  function showToast(msg, type="success"){
+    const id = "t_"+Date.now();
+    const el = document.createElement('div');
+    el.className = "toast align-items-center text-bg-"+(type==="success"?"success":(type==="warning"?"warning":"secondary"))+" border-0";
+    el.id = id;
+    el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+    document.getElementById('toastContainer').appendChild(el);
+    new bootstrap.Toast(el, { delay: 2500 }).show();
+    setTimeout(()=>el.remove(), 3500);
+  }
+
+  /*****************
+   * PLANT SCANNER IMPLEMENTATION
+   *****************/
+  // Elements
+  const plantFile = document.getElementById('plantFile');
+  const cameraPreview = document.getElementById('cameraPreview');
+  const startCameraBtn = document.getElementById('startCameraBtn');
+  const stopCameraBtn = document.getElementById('stopCameraBtn');
+  const captureBtn = document.getElementById('captureBtn');
+  const scanBtn = document.getElementById('scanBtn');
+  const saveReportBtn = document.getElementById('saveReportBtn');
+  const clearScanBtn = document.getElementById('clearScanBtn');
+  const diseaseChips = document.getElementById('diseaseChips');
+  const remediesWrap = document.getElementById('remediesWrap');
+  const scanTitle = document.getElementById('scanTitle');
+  const scanSummary = document.getElementById('scanSummary');
+  const savedReportsEl = document.getElementById('savedReports');
+  const savedCount = document.getElementById('savedCount');
+  const scanSavedBadge = document.getElementById('scanSavedBadge');
+
+  // camera stream
+  let cameraStream = null;
+  let cameraVideoEl = null;
+  let currentImageDataUrl = null;
+  let lastScanResult = null;
+
+  // start camera
+  startCameraBtn.addEventListener('click', async ()=>{
+    try{
+      if (cameraStream) return;
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio:false });
+      cameraVideoEl = document.createElement('video');
+      cameraVideoEl.autoplay = true;
+      cameraVideoEl.playsInline = true;
+      cameraVideoEl.muted = true;
+      cameraVideoEl.srcObject = cameraStream;
+      cameraVideoEl.style.width = '100%';
+      cameraVideoEl.style.height = '100%';
+      cameraPreview.innerHTML = '';
+      cameraPreview.appendChild(cameraVideoEl);
+      showToast('Camera started');
+    }catch(e){ showToast('Camera error: '+(e.message||e),'warning'); }
+  });
+
+  // stop camera
+  stopCameraBtn.addEventListener('click', ()=>{
+    if(cameraStream){
+      cameraStream.getTracks().forEach(t=>t.stop());
+      cameraStream = null;
+      cameraVideoEl = null;
+      cameraPreview.innerHTML = '<div class="text-muted small">Camera stopped</div>';
+    }
+  });
+
+  // capture (from video or file)
+  captureBtn.addEventListener('click', async ()=>{
+    if (cameraVideoEl){
+      // capture frame to canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = cameraVideoEl.videoWidth || 1280;
+      canvas.height = cameraVideoEl.videoHeight || 720;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(cameraVideoEl,0,0,canvas.width,canvas.height);
+      currentImageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      showCapturedImage(currentImageDataUrl);
+    } else if (plantFile && plantFile.files && plantFile.files[0]){
+      // file already loaded by input change listener
+      if (!currentImageDataUrl) showToast('Pick an image file first', 'warning');
+    } else {
+      showToast('No camera or file available', 'warning');
+    }
+    scanSavedBadge.innerHTML = '';
+  });
+
+  // file input -> show preview and set currentImageDataUrl
+  plantFile.addEventListener('change', async (ev)=>{
+    const f = ev.target.files[0];
+    if(!f) return;
+    try{
+      const compressed = await compressImage(f, 1200, 0.8);
+      currentImageDataUrl = compressed;
+      showCapturedImage(currentImageDataUrl);
+    }catch(e){
+      const reader = new FileReader();
+      reader.onload = (e)=>{ currentImageDataUrl = e.target.result; showCapturedImage(currentImageDataUrl); };
+      reader.readAsDataURL(f);
+    }
+    scanSavedBadge.innerHTML = '';
+  });
+
+  function showCapturedImage(dataUrl){
+    cameraPreview.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = 'Captured plant';
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+    cameraPreview.appendChild(img);
+  }
+
+  // scanning flow: calls api.scanPlant or uses fallback
+  scanBtn.addEventListener('click', async ()=>{
+    if (!currentImageDataUrl){ showToast('Please capture or upload an image first','warning'); return; }
+    scanTitle.textContent = 'Analyzing...';
+    scanSummary.textContent = 'Running quick scan (frontend).';
+    diseaseChips.innerHTML = '';
+    remediesWrap.innerHTML = '';
+    try {
+      // Prefer backend API if implemented — api.scanPlant is a stub you can replace with fetch
+      const res = await api.scanPlant ? await api.scanPlant(currentImageDataUrl) : await frontendScanPlant(currentImageDataUrl);
+      lastScanResult = res;
+      displayScanResult(res);
+      addNotif(`Plant scanned: ${res.predictions?.[0]?.label || 'Unknown'}`);
+    } catch(e){
+      showToast('Scan failed: '+(e.message||e),'warning');
+      scanTitle.textContent = 'Scan failed';
+      scanSummary.textContent = 'Unable to run plant scan.';
+    }
+  });
+
+  // Simple fallback local scanner (rule-based + lightweight image analysis)
+  async function frontendScanPlant(dataUrl){
+    // Analyze image for green ratio and dark spots — purely heuristic, for demo only.
+    return new Promise((resolve)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const cw = Math.min(800, img.width);
+        const ch = Math.round(img.height * (cw / img.width));
+        const c = document.createElement('canvas');
+        c.width = cw; c.height = ch;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, cw, ch);
+        const d = ctx.getImageData(0,0,cw,ch).data;
+        let gSum=0, total=0, darkPixels=0;
+        for(let i=0;i<d.length;i+=4){
+          const r=d[i], g=d[i+1], b=d[i+2];
+          total++;
+          gSum += g;
+          const brightness = (r+g+b)/3;
+          if (brightness < 60) darkPixels++;
+        }
+        const avgG = gSum/total;
+        const darkRatio = darkPixels/total;
+        // Heuristic rules:
+        let predictions = [];
+        if (avgG < 70) {
+          predictions.push({ label: 'Nutrient deficiency (yellowing)', confidence: 0.78 });
+        }
+        if (darkRatio > 0.05) {
+          predictions.push({ label: 'Leaf spot / fungal infection', confidence: 0.72 });
+        }
+        if (!predictions.length) {
+          predictions.push({ label: 'Healthy / No obvious issue', confidence: 0.88 });
+        }
+        // map to remedies
+        predictions = predictions.map(p=>{
+          const remedy = simpleRemedyForLabel(p.label);
+          return { ...p, remedy };
+        });
+        resolve({ source: 'local', predictions, meta: { avgG: Math.round(avgG), darkRatio: +(darkRatio.toFixed(3)) }});
+      };
+      img.onerror = ()=> resolve({ source:'local', predictions:[{label:'Unreadable image', confidence:0.2, remedy:'Retake photo in better light.'}] });
+      img.src = dataUrl;
+    });
+  }
+
+  function simpleRemedyForLabel(label){
+    if (/nutrient/i.test(label)) return "Apply balanced NPK fertilizer; test soil pH; foliar spray with micronutrients (Zn, Fe).";
+    if (/spot|fungal/i.test(label)) return "Remove affected leaves; apply copper-based fungicide or neem-oil spray; ensure good airflow and avoid overhead watering.";
+    if (/blight/i.test(label)) return "Remove infected plants; apply recommended fungicides (follow label); rotate crops next season.";
+    if (/healthy/i.test(label)) return "Plant looks healthy. Continue regular monitoring and good agronomy practices.";
+    return "Observe the plant, take clearer photos from different angles, and re-scan.";
+  }
+
+  // api.scanPlant stub — replace with fetch('/api/scan', ...) to call real model
+  const api = window.api || {};
+  api.scanPlant = async function(imageBase64){
+    // If you later implement backend, replace this with fetch POST returning predictions
+    // Example:
+    // return fetch('/api/scan', { method:'POST', body: JSON.stringify({ image: imageBase64 }) }).then(r=>r.json());
+    // For now call frontend fallback
+    return frontendScanPlant(imageBase64);
+  };
+
+  // show result in UI
+  function displayScanResult(result){
+    scanTitle.textContent = 'Scan results';
+    scanSummary.innerHTML = `<div class="tiny">Source: ${escapeText(result.source||'local')} • avgG:${result.meta?.avgG ?? '-'} • darkRatio:${result.meta?.darkRatio ?? '-'} </div>`;
+
+    diseaseChips.innerHTML = '';
+    result.predictions.forEach(p=>{
+      const pill = document.createElement('div');
+      pill.className = 'disease-pill';
+      pill.innerHTML = `<strong>${escapeText(p.label)}</strong> — ${(p.confidence*100).toFixed(0)}%`;
+      diseaseChips.appendChild(pill);
+    });
+
+    remediesWrap.innerHTML = '';
+    result.predictions.forEach(p=>{
+      const r = document.createElement('div');
+      r.className = 'remedy';
+      r.innerHTML = `<strong>Remedy for ${escapeText(p.label)}:</strong><div style="margin-top:6px">${escapeText(p.remedy)}</div>`;
+      remediesWrap.appendChild(r);
+    });
+
+    // allow saving
+    lastScanResult = result;
+  }
+
+  // Save report locally
+  saveReportBtn.addEventListener('click', ()=>{
+    if (!lastScanResult || !currentImageDataUrl){ showToast('No scan to save', 'warning'); return; }
+    const report = {
+      id: uid('pr'),
+      ts: new Date().toISOString(),
+      image: currentImageDataUrl,
+      result: lastScanResult,
+      location: safeParse(localStorage.getItem('currentFarmerProfile'), {}).location || null
+    };
+    plantReports.unshift(report);
+    if (plantReports.length>200) plantReports = plantReports.slice(0,200);
+    localStorage.setItem('plantReports', JSON.stringify(plantReports));
+    showToast('Report saved');
+    scanSavedBadge.innerHTML = `<span class="saved-badge">Saved</span>`;
+    refreshSavedReports();
+  });
+
+  function refreshSavedReports(){
+    savedReportsEl.innerHTML = '';
+    plantReports = safeParse(localStorage.getItem("plantReports"), []);
+    savedCount.textContent = `(${plantReports.length})`;
+    if (!plantReports.length) { savedReportsEl.innerHTML = `<div class="tiny text-muted">No reports saved yet.</div>`; return; }
+    plantReports.slice(0,8).forEach(r=>{
+      const row = document.createElement('div');
+      row.className = 'd-flex align-items-center gap-2 mb-2';
+      const img = document.createElement('img'); img.src = r.image; img.width = 64; img.height = 48; img.style.objectFit='cover'; img.style.borderRadius='6px';
+      const txt = document.createElement('div');
+      txt.innerHTML = `<div><strong>${r.result.predictions[0].label}</strong> • <small class="text-muted">${new Date(r.ts).toLocaleString()}</small></div><div class="tiny text-muted">${r.location || ''}</div>`;
+      const btns = document.createElement('div'); btns.className='ms-auto';
+      btns.innerHTML = `<button class="btn btn-sm btn-outline-primary me-1" onclick='viewReport("${r.id}")'>View</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick='deleteReport("${r.id}")'>Delete</button>`;
+      row.appendChild(img); row.appendChild(txt); row.appendChild(btns);
+      savedReportsEl.appendChild(row);
+    });
+  }
+
+  window.viewReport = function(id){
+    const r = plantReports.find(x=>x.id===id);
+    if(!r) return;
+    // show as scan result
+    currentImageDataUrl = r.image;
+    showCapturedImage(currentImageDataUrl);
+    displayScanResult(r.result);
+    openSection('plant');
+  };
+
+  window.deleteReport = function(id){
+    if(!confirm('Delete this saved report?')) return;
+    plantReports = plantReports.filter(r=>r.id!==id);
+    localStorage.setItem('plantReports', JSON.stringify(plantReports));
+    refreshSavedReports();
+    showToast('Report deleted', 'warning');
+  };
+
+  function exportReportsPDF(){
+    if (!plantReports || !plantReports.length){ showToast('No reports to export', 'warning'); return;}
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p','pt','a4');
+    doc.text('Plant Scanner Reports', 40, 40);
+    let y = 70;
+    plantReports.slice(0,10).forEach((r, idx)=>{
+      if(y>720){ doc.addPage(); y=40; }
+      doc.setFontSize(10);
+      doc.text(`${idx+1}. ${r.result.predictions[0].label} — ${new Date(r.ts).toLocaleString()}`, 40, y);
+      doc.text(`Remedy: ${r.result.predictions[0].remedy}`, 40, y+12);
+      try{
+        doc.addImage(r.image, 'JPEG', 400, y-6, 140, 100, undefined, 'FAST');
+      }catch(e){}
+      y += 120;
+    });
+    doc.save('plant_reports.pdf');
+  }
+
+  // Clear scan
+  clearScanBtn.addEventListener('click', ()=> {
+    currentImageDataUrl = null;
+    lastScanResult = null;
+    cameraPreview.innerHTML = '<div class="text-muted small">No image yet — use camera or upload</div>';
+    diseaseChips.innerHTML = '';
+    remediesWrap.innerHTML = '';
+    scanTitle.textContent = 'Scan results';
+    scanSummary.textContent = 'No scan run yet.';
+    scanSavedBadge.innerHTML = '';
+  });
+
+  // Quick view when loading saved reports on init
+  function loadPlantReportsOnStart(){
+    plantReports = safeParse(localStorage.getItem("plantReports"), []);
+    refreshSavedReports();
+  }
+
+  /*****************
+   * MIGRATION & BACKUP HELPERS (unchanged)
+   *****************/
+  (function migrateIfNeeded(){
+    let migrated = false;
+    farmerProducts = farmerProducts.map(p=>{ if(!p.id){ p.id = uid('prod'); migrated=true;} return p; });
+    farmerOrders = farmerOrders.map(o=>{ if(!o.id){ o.id = uid('ord'); migrated=true;} return o; });
+    if(migrated){ localStorage.setItem('farmerProducts', JSON.stringify(farmerProducts)); localStorage.setItem('farmerOrders', JSON.stringify(farmerOrders)); }
+  })();
+
+  function exportLocalDB(){
+    const payload = { profile: safeParse(localStorage.getItem('currentFarmerProfile'), {}), products: farmerProducts, orders: farmerOrders, notifications: notifs, users: safeParse(localStorage.getItem('users'),[]), plantReports: plantReports };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'farmtrade_local_backup.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Expose small debug object
+  window._ft = { safeParse, uid, escapeText, exportLocalDB };
+
+  /*****************
+   * STORAGE EVENT LISTENER FOR SYNC WITH TRADER
+   *****************/
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'traderOrders') {
+      // If trader updates their orders, re-render farmer orders if needed
+      renderOrders();
+      updateKPIs();
+    }
+    if (event.key === 'notifications_trader') {
+      // No direct action, but could log or something
+    }
+    if (event.key === 'users') {
+      // Update chat peers and map markers
+      loadPeers();
+      renderChat();
+      if (map) {
+        // Re-toggle trader markers if showing
+        const toggle = document.getElementById('toggleTraders');
+        if (toggle && toggle.checked) {
+          toggleTraderMarkers();
+        }
+      }
+    }
+  });
+
+  /*****************
+   * EXPORT/IMPORT DATA
+   *****************/
+  function exportFarmerData(){
+    const data = {
+      profile: safeParse(localStorage.getItem("currentFarmerProfile"), {}),
+      products: farmerProducts,
+      orders: farmerOrders,
+      notifications: notifs,
+      plantReports: plantReports,
+      users: safeParse(localStorage.getItem("users"), []),
+      traderOrders: safeParse(localStorage.getItem("traderOrders"), []),
+      traderNotifications: safeParse(localStorage.getItem("notifications_trader"), [])
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'farmer_backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Data exported successfully.");
+  }
+
+  function importFarmerData(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (data.profile) localStorage.setItem("currentFarmerProfile", JSON.stringify(data.profile));
+          if (data.products) localStorage.setItem("farmerProducts", JSON.stringify(data.products));
+          if (data.orders) localStorage.setItem("farmerOrders", JSON.stringify(data.orders));
+          if (data.notifications) localStorage.setItem("notifications", JSON.stringify(data.notifications));
+          if (data.plantReports) localStorage.setItem("plantReports", JSON.stringify(data.plantReports));
+          if (data.users) localStorage.setItem("users", JSON.stringify(data.users));
+          if (data.traderOrders) localStorage.setItem("traderOrders", JSON.stringify(data.traderOrders));
+          if (data.traderNotifications) localStorage.setItem("notifications_trader", JSON.stringify(data.traderNotifications));
+          // Reload data
+          farmerProducts = safeParse(localStorage.getItem("farmerProducts"), []);
+          farmerOrders = safeParse(localStorage.getItem("farmerOrders"), []);
+          notifs = safeParse(localStorage.getItem("notifications"), []);
+          plantReports = safeParse(localStorage.getItem("plantReports"), []);
+          loadProfile();
+          updateKPIs();
+          renderInventory();
+          renderOrders();
+          renderNotifs();
+          loadPeers();
+          renderChat();
+          refreshSavedReports();
+          showToast("Data imported successfully. Page reloaded.");
+        } catch (err) {
+          showToast("Invalid file format.", "warning");
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  }
+
+  /*****************
+   * INIT (unchanged + plant reports)
+   *****************/
+  function onLoadInit(){
+    openSection('overview');
+    loadProfile();
+    updateKPIs();
+    renderInventory();
+    renderOrders();
+    renderNotifs();
+    initMap();
+    document.getElementById('browserUrl').value = HOME_URL;
+    document.getElementById('browserFrame').src = HOME_URL;
+    loadPeers();
+    renderChat();
+    loadPlantReportsOnStart();
+  }
+  window.addEventListener('load', onLoadInit);
+
+  </script>
+</body>
+</html>

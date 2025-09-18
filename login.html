@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - FarmTrade Connect</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    body {
+      background: url("assets/images/bg.jpg") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .role-button {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .role-button.selected {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.5);
+      background-color: #28a745; /* Green background for selected */
+      color: white; /* White text for selected */
+    }
+
+    .role-button:not(.selected) {
+      background-color: #ffffff; /* White background for unselected */
+      color: #28a745; /* Green text for unselected */
+    }
+
+    .role-button:hover {
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+    .logo {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 50%; /* ✅ circular shape */
+      display: block;
+      margin: 0 auto 15px auto;
+      border: 3px solid #28a745; /* optional green border */
+    }
+
+    /* Password visibility toggle */
+    .password-toggle {
+      position: relative;
+    }
+    .password-toggle-icon {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #28a745;
+    }
+
+    /* Inline error message styling */
+    .error-message {
+      color: #dc3545;
+      font-size: 0.875em;
+      margin-top: 0.25rem;
+    }
+
+    /* Modal styles */
+    .modal-backdrop.show {
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container text-start mt-3">
+    <button class="btn btn-outline-secondary btn-sm" onclick="history.back()">⬅ Back</button>
+  </div>
+
+  <div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <!-- ✅ Changed background opacity to 70% -->
+    <div class="card shadow-lg p-4" style="width: 25rem; background: rgba(255,255,255,0.7);">
+      <img src="assets/images/logo.png" alt="FarmTrade Logo" class="logo" />
+
+      <h2 class="text-center text-success mb-3">Login</h2>
+
+      <div class="mb-3 text-center" role="radiogroup" aria-label="Select user role">
+        <button
+          type="button"
+          class="btn btn-sm role-button me-2"
+          onclick="setRole('farmer')"
+          id="role-farmer"
+          aria-pressed="false"
+          tabindex="0"
+        >
+          Farmer
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm role-button"
+          onclick="setRole('trader')"
+          id="role-trader"
+          aria-pressed="false"
+          tabindex="0"
+        >
+          Trader
+        </button>
+        <div id="role-error" class="error-message visually-hidden">Please select a role.</div>
+      </div>
+
+      <form id="login-form" novalidate>
+        <div class="mb-3">
+          <label for="username" class="form-label">Email / Username</label>
+          <input
+            type="text"
+            id="username"
+            class="form-control"
+            required
+            aria-describedby="usernameHelp"
+            aria-invalid="false"
+            autocomplete="username"
+          />
+          <div id="username-error" class="error-message visually-hidden">Please enter a valid email or username.</div>
+        </div>
+        <div class="mb-3 password-toggle">
+          <label for="password" class="form-label">Password</label>
+          <input
+            type="password"
+            id="password"
+            class="form-control"
+            required
+            aria-describedby="passwordHelp"
+            aria-invalid="false"
+            autocomplete="current-password"
+            minlength="6"
+          />
+          <span
+            class="password-toggle-icon"
+            role="button"
+            tabindex="0"
+            aria-label="Toggle password visibility"
+            onclick="togglePasswordVisibility()"
+            onkeydown="if(event.key==='Enter' || event.key===' ') togglePasswordVisibility()"
+          >
+            👁️
+          </span>
+          <div id="password-error" class="error-message visually-hidden">
+            Password must be at least 6 characters.
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success w-100" id="login-btn" aria-live="polite">
+          Login
+        </button>
+      </form>
+
+      <div class="text-center mt-2">
+        <button
+          type="button"
+          class="btn btn-link p-0"
+          id="forgot-password-btn"
+          aria-haspopup="dialog"
+          aria-controls="forgotPasswordModal"
+          aria-expanded="false"
+          onclick="openForgotPasswordModal()"
+        >
+          Forgot Password?
+        </button>
+      </div>
+
+      <p class="text-center mt-3">
+        Don't have an account? <a href="register.html">Register</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div
+    class="modal fade"
+    id="forgotPasswordModal"
+    tabindex="-1"
+    aria-labelledby="forgotPasswordModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="forgot-password-form" novalidate>
+          <div class="modal-header">
+            <h5 class="modal-title" id="forgotPasswordModalLabel">Forgot Password</h5>
+            <button
+              type="button"
+              class="btn-close"
+              aria-label="Close"
+              onclick="closeForgotPasswordModal()"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <!-- Step 1: Enter Email -->
+            <div id="fp-step-email">
+              <label for="fp-email" class="form-label">Enter your registered email</label>
+              <input
+                type="email"
+                id="fp-email"
+                class="form-control"
+                required
+                aria-describedby="fp-email-error"
+                aria-invalid="false"
+                autocomplete="email"
+              />
+              <div id="fp-email-error" class="error-message visually-hidden">
+                Please enter a valid email address.
+              </div>
+            </div>
+
+            <!-- Step 2: Enter OTP -->
+            <div id="fp-step-otp" class="d-none">
+              <label for="fp-otp" class="form-label">Enter OTP sent to your email</label>
+              <input
+                type="text"
+                id="fp-otp"
+                class="form-control"
+                required
+                maxlength="6"
+                aria-describedby="fp-otp-error"
+                aria-invalid="false"
+                autocomplete="one-time-code"
+              />
+              <div id="fp-otp-error" class="error-message visually-hidden">
+                Please enter the 6-digit OTP.
+              </div>
+              <div class="mt-2">
+                <button type="button" class="btn btn-link p-0" onclick="resendOTP()" id="resend-otp-btn">
+                  Resend OTP
+                </button>
+                <span id="resend-otp-timer" class="text-muted ms-2"></span>
+              </div>
+            </div>
+
+            <!-- Step 3: Set New Password -->
+            <div id="fp-step-new-password" class="d-none">
+              <label for="fp-new-password" class="form-label">Set New Password</label>
+              <input
+                type="password"
+                id="fp-new-password"
+                class="form-control"
+                required
+                minlength="6"
+                aria-describedby="fp-new-password-error"
+                aria-invalid="false"
+                autocomplete="new-password"
+              />
+              <span
+                class="password-toggle-icon"
+                role="button"
+                tabindex="0"
+                aria-label="Toggle new password visibility"
+                onclick="toggleNewPasswordVisibility()"
+                onkeydown="if(event.key==='Enter' || event.key===' ') toggleNewPasswordVisibility()"
+              >
+                👁️
+              </span>
+              <div id="fp-new-password-error" class="error-message visually-hidden">
+                Password must be at least 6 characters.
+              </div>
+              <label for="fp-confirm-password" class="form-label mt-3">Confirm New Password</label>
+              <input
+                type="password"
+                id="fp-confirm-password"
+                class="form-control"
+                required
+                minlength="6"
+                aria-describedby="fp-confirm-password-error"
+                aria-invalid="false"
+                autocomplete="new-password"
+              />
+              <div id="fp-confirm-password-error" class="error-message visually-hidden">
+                Passwords do not match.
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeForgotPasswordModal()"
+              id="fp-cancel-btn"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-success" id="fp-next-btn">
+              Next
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    // Role selection with ARIA and keyboard support
+    let selectedRole = null;
+
+    function setRole(role) {
+      selectedRole = role;
+      const farmerButton = document.getElementById("role-farmer");
+      const traderButton = document.getElementById("role-trader");
+      const roleError = document.getElementById("role-error");
+
+      if (role === "farmer") {
+        farmerButton.classList.add("selected");
+        farmerButton.setAttribute("aria-pressed", "true");
+        traderButton.classList.remove("selected");
+        traderButton.setAttribute("aria-pressed", "false");
+      } else if (role === "trader") {
+        traderButton.classList.add("selected");
+        traderButton.setAttribute("aria-pressed", "true");
+        farmerButton.classList.remove("selected");
+        farmerButton.setAttribute("aria-pressed", "false");
+      }
+      roleError.classList.add("visually-hidden");
+    }
+
+    // Password visibility toggle for login form
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById("password");
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+      } else {
+        passwordInput.type = "password";
+      }
+    }
+
+    // Password visibility toggle for forgot password new password
+    function toggleNewPasswordVisibility() {
+      const newPasswordInput = document.getElementById("fp-new-password");
+      if (newPasswordInput.type === "password") {
+        newPasswordInput.type = "text";
+      } else {
+        newPasswordInput.type = "password";
+      }
+    }
+
+    // Login form validation and submission
+    const loginForm = document.getElementById("login-form");
+    loginForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      // Clear previous errors
+      clearLoginErrors();
+
+      let valid = true;
+
+      // Validate role selection
+      if (!selectedRole) {
+        document.getElementById("role-error").classList.remove("visually-hidden");
+        valid = false;
+      }
+
+      // Validate username/email (basic check: non-empty and if contains '@' then validate email format)
+      const usernameInput = document.getElementById("username");
+      const usernameValue = usernameInput.value.trim();
+      if (!usernameValue) {
+        showError("username");
+        valid = false;
+      } else if (usernameValue.includes("@") && !validateEmail(usernameValue)) {
+        showError("username");
+        valid = false;
+      }
+
+      // Validate password length
+      const passwordInput = document.getElementById("password");
+      if (passwordInput.value.length < 6) {
+        showError("password");
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      // Placeholder login logic
+      alert(`Logging in as ${selectedRole}`);
+
+      // Here you would add your actual login logic (e.g., API call)
+    });
+
+    function clearLoginErrors() {
+      document.getElementById("role-error").classList.add("visually-hidden");
+      hideError("username");
+      hideError("password");
+    }
+
+    function showError(field) {
+      const errorEl = document.getElementById(field + "-error");
+      const inputEl = document.getElementById(field);
+      if (errorEl && inputEl) {
+        errorEl.classList.remove("visually-hidden");
+        inputEl.setAttribute("aria-invalid", "true");
+      }
+    }
+
+    function hideError(field) {
+      const errorEl = document.getElementById(field + "-error");
+      const inputEl = document.getElementById(field);
+      if (errorEl && inputEl) {
+        errorEl.classList.add("visually-hidden");
+        inputEl.setAttribute("aria-invalid", "false");
+      }
+    }
+
+    function validateEmail(email) {
+      // Simple email regex
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email.toLowerCase());
+    }
+
+    // Forgot Password Modal Logic
+    const forgotPasswordModal = new bootstrap.Modal(document.getElementById("forgotPasswordModal"));
+    const forgotPasswordForm = document.getElementById("forgot-password-form");
+    const fpStepEmail = document.getElementById("fp-step-email");
+    const fpStepOtp = document.getElementById("fp-step-otp");
+    const fpStepNewPassword = document.getElementById("fp-step-new-password");
+    const fpNextBtn = document.getElementById("fp-next-btn");
+    const fpCancelBtn = document.getElementById("fp-cancel-btn");
+    const forgotPasswordBtn = document.getElementById("forgot-password-btn");
+
+    let currentStep = 1;
+    let otpSent = false;
+    let resendTimer = null;
+    let resendCountdown = 30;
+
+    function openForgotPasswordModal() {
+      forgotPasswordModal.show();
+      forgotPasswordBtn.setAttribute("aria-expanded", "true");
+      resetForgotPasswordForm();
+    }
+
+    function closeForgotPasswordModal() {
+      forgotPasswordModal.hide();
+      forgotPasswordBtn.setAttribute("aria-expanded", "false");
+      resetForgotPasswordForm();
+    }
+
+    function resetForgotPasswordForm() {
+      currentStep = 1;
+      otpSent = false;
+      resendCountdown = 30;
+      clearInterval(resendTimer);
+      document.getElementById("resend-otp-timer").textContent = "";
+      fpStepEmail.classList.remove("d-none");
+      fpStepOtp.classList.add("d-none");
+      fpStepNewPassword.classList.add("d-none");
+      fpNextBtn.textContent = "Next";
+
+      // Clear inputs and errors
+      forgotPasswordForm.reset();
+      clearFpErrors();
+    }
+
+    function clearFpErrors() {
+      ["fp-email", "fp-otp", "fp-new-password", "fp-confirm-password"].forEach((id) => {
+        const input = document.getElementById(id);
+        const error = document.getElementById(id + "-error");
+        if (input && error) {
+          input.setAttribute("aria-invalid", "false");
+          error.classList.add("visually-hidden");
+        }
+      });
+    }
+
+    forgotPasswordForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      clearFpErrors();
+
+      if (currentStep === 1) {
+        // Validate email
+        const emailInput = document.getElementById("fp-email");
+        const emailValue = emailInput.value.trim();
+        if (!emailValue || !validateEmail(emailValue)) {
+          showFpError("fp-email");
+          return;
+        }
+        // Simulate sending OTP
+        sendOTP(emailValue);
+      } else if (currentStep === 2) {
+        // Validate OTP
+        const otpInput = document.getElementById("fp-otp");
+        const otpValue = otpInput.value.trim();
+        if (!otpValue || otpValue.length !== 6 || !/^\d{6}$/.test(otpValue)) {
+          showFpError("fp-otp");
+          return;
+        }
+        // Simulate OTP verification success
+        verifyOTP(otpValue);
+      } else if (currentStep === 3) {
+        // Validate new password and confirm password
+        const newPasswordInput = document.getElementById("fp-new-password");
+        const confirmPasswordInput = document.getElementById("fp-confirm-password");
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        let valid = true;
+        if (newPassword.length < 6) {
+          showFpError("fp-new-password");
+          valid = false;
+        }
+        if (confirmPassword !== newPassword || confirmPassword.length < 6) {
+          showFpError("fp-confirm-password");
+          valid = false;
+        }
+        if (!valid) return;
+
+        // Simulate password reset success
+        resetPassword(newPassword);
+      }
+    });
+
+    function showFpError(fieldId) {
+      const input = document.getElementById(fieldId);
+      const error = document.getElementById(fieldId + "-error");
+      if (input && error) {
+        input.setAttribute("aria-invalid", "true");
+        error.classList.remove("visually-hidden");
+      }
+    }
+
+    function sendOTP(email) {
+      // Simulate sending OTP (replace with real API call)
+      otpSent = true;
+      currentStep = 2;
+      fpStepEmail.classList.add("d-none");
+      fpStepOtp.classList.remove("d-none");
+      fpStepNewPassword.classList.add("d-none");
+      fpNextBtn.textContent = "Verify OTP";
+
+      startResendTimer();
+      alert(`OTP sent to ${email} (simulated)`); // For demo only
+    }
+
+    function verifyOTP(otp) {
+      // Simulate OTP verification (replace with real API call)
+      // For demo, accept any 6-digit OTP
+      currentStep = 3;
+      fpStepEmail.classList.add("d-none");
+      fpStepOtp.classList.add("d-none");
+      fpStepNewPassword.classList.remove("d-none");
+      fpNextBtn.textContent = "Reset Password";
+    }
