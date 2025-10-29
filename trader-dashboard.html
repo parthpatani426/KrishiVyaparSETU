@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Trader Dashboard - FarmTrade Connect</title>
+  <title>Trader Dashboard - KrishiVyaparSETU</title>
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -11,15 +11,18 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <!-- Leaflet (Maps) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+ <!-- MapLibre GL -->
+  <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
+  <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+
+  <!-- Turf.js for geometry helpers -->
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 
   <!-- Export libs (optional) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-  
+
   <!-- TensorFlow.js for potential AI models -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
 
@@ -28,12 +31,12 @@
       --brand: #0d6efd; /* blue accent for traders */
     }
     body {
-       background: url("assets/images/bg.jpg") no-repeat center center fixed;
+       background: url("/static/assets/images/bg.jpg") no-repeat center center fixed;
       background-size: cover;
     }
     .dashboard-card{
-      background:#fff; border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,.06);
-      padding:20px; margin-bottom:20px;
+      background:#9e9b9b70; border-radius:14px; box-shadow:0 6px 18px rgba(202, 198, 198, 0.073);
+      padding:15px; margin-bottom:20px;
     }
     .dashboard-card h4{ margin-bottom: 0.75rem; }
     .kpi { display:grid; grid-template-columns: repeat(4, minmax(160px,1fr)); gap:12px; }
@@ -52,11 +55,17 @@
       width:36px; height:36px; border-radius:50%; background:#e7f0ff; color:var(--brand);
       display:flex; align-items:center; justify-content:center; font-weight:700; border:1px solid #cfe2ff;
     }
-    #map { height:420px; border:1px solid #dee2e6; border-radius:10px; }
+    /* Map styles */
+ #map { width:100%; height:100%; min-height:540px; border-radius:10px; border:1px solid #d1d5db; }
+    .map-col { min-height:540px; }
+    .map-wrapper { height:100%; position:relative; }
+    .tiny { font-size:.85rem; color:#6b7280; }
+    @media (max-width:991px){ .kpi{ grid-template-columns: repeat(2,1fr); } #map{ min-height:420px; } }
+
+    /* Browser Toolbar */
     .browser-toolbar .form-control{ font-family: ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace; }
     iframe.loading{ opacity:.7; pointer-events:none; }
-
-    /* Chat */
+     /* Chat */
     #chatBox{
       height:280px; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#fafbff;
     }
@@ -82,7 +91,7 @@
   <nav class="navbar navbar-dark" style="background: var(--brand);">
     <div class="container-fluid">
       <button class="btn btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainMenu">☰ Menu</button>
-      <span class="navbar-brand fw-bold">📈 FarmTrade Connect — Trader</span>
+      <span class="navbar-brand fw-bold">📈 KrishiVyaparSETU — Trader</span>
       <div class="d-flex align-items-center gap-2">
         <button class="btn btn-light nav-icon-btn" id="bellBtn" title="Notifications">🔔
           <span class="nav-icon-badge d-none" id="bellBadge">0</span>
@@ -94,6 +103,7 @@
           <ul class="dropdown-menu dropdown-menu-end">
             <li><h6 class="dropdown-header" id="ddName">Trader</h6></li>
             <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">Edit Profile</button></li>
+            <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#contactModal">Contact Us</button></li>
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item text-danger" id="logoutBtn">Logout</button></li>
           </ul>
@@ -114,18 +124,17 @@
         <a class="nav-link" href="#" onclick="openSection('browse')">Browse Crops</a>
         <a class="nav-link" href="#" onclick="openSection('orders')">Orders Management</a>
         <a class="nav-link" href="#" onclick="openSection('weather')">Local Weather</a>
-        <a class="nav-link" href="#" onclick="openSection('map')">Maps</a>
+        <a class="nav-link" href="#" onclick="openSection('map')">Chizu</a>
         <a class="nav-link" href="#" onclick="openSection('schemes')">Govt Schemes & Resources</a>
-        <a class="nav-link" href="#" onclick="openSection('browser')">Browser</a>
+        <a class="nav-link" href="#" onclick="openSection('browser')">Burauza 🌐</a>
         <a class="nav-link" href="#" onclick="openSection('chat')">Chat & Calls</a>
         <hr>
         <a class="nav-link" href="#" onclick="openSection('grain')">Grain Quality Scanner 🌾</a>
+        <a class="nav-link" href="#" onclick="openSection('prediction')">Price Prediction 📈</a>
       </nav>
     </div>
   </div>
-
   <div class="container my-3">
-
     <!-- OVERVIEW -->
     <section class="dashboard-card" id="sec-overview">
       <h4 class="text-primary mb-3">Profile & Overview</h4>
@@ -133,11 +142,15 @@
         <div class="col-lg-4">
           <div class="card h-100">
             <div class="card-body">
-              <h5 class="card-title">My Profile</h5>
-              <div class="mb-2">
-                <label class="form-label">Name</label>
-                <input id="profName" class="form-control" placeholder="Your name">
-              </div>
+      <h5 class="card-title">My Profile</h5>
+      <div class="mb-2 text-center">
+        <img id="profPic" src="" alt="Profile Picture" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid #0d6efd; display: none;">
+        <div id="profPicPlaceholder" class="avatar mx-auto" style="width: 100px; height: 100px; font-size: 2rem;">T</div>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Name</label>
+        <input id="profName" class="form-control" placeholder="Your name">
+      </div>
               <div class="mb-2">
                 <label class="form-label">Mobile</label>
                 <input id="profMobile" class="form-control" placeholder="10-digit mobile" maxlength="10">
@@ -147,8 +160,10 @@
                 <input id="profLocation" class="form-control" placeholder="City, State">
               </div>
               <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#profileModal">Profile Setup</button>
                 <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save</button>
                 <button class="btn btn-outline-secondary btn-sm" onclick="loadProfile()">Reload</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="exportLocalDB()">Backup</button>
               </div>
               <div class="text-muted small mt-2">Stored locally for demo.</div>
             </div>
@@ -170,7 +185,6 @@
         </div>
       </div>
     </section>
-
     <!-- BROWSE CROPS (pulls from farmerProducts) -->
     <section class="dashboard-card d-none" id="sec-browse">
       <h4 class="text-primary mb-3">Browse Crops from Farmers</h4>
@@ -197,10 +211,16 @@
         </table>
       </div>
     </section>
-
     <!-- ORDERS -->
     <section class="dashboard-card d-none" id="sec-orders">
       <h4 class="text-primary mb-3">Orders Management</h4>
+      <div class="row g-2 mb-2">
+        <div class="col-md-8"></div>
+        <div class="col-md-4 text-end">
+          <button class="btn btn-outline-primary btn-sm" onclick="exportOrdersPDF()">Export as PDF</button>
+          <button class="btn btn-outline-success btn-sm" onclick="exportOrdersExcel()">Export Excel</button>
+        </div>
+      </div>
       <div class="table-responsive">
         <table class="table table-bordered align-middle">
           <thead class="table-light"><tr>
@@ -227,23 +247,71 @@
           <div id="wDetails" class="small"></div>
         </div>
       </div>
-      <div class="text-muted small mt-2">Powered by Open-Meteo. No API key required.</div>
+      <div class="text-muted small mt-2"> Check your weather forecast in your city.</div>
     </section>
 
     <!-- MAP -->
     <section class="dashboard-card d-none" id="sec-map">
-      <h4 class="text-primary mb-3">🗺️ Maps: Traders & Farmers</h4>
-      <div class="row g-2 mb-2">
-        <div class="col-md-6"><input id="mapSearch" class="form-control" placeholder="Search address or market (e.g., Vashi APMC)"></div>
-        <div class="col-md-3 d-grid"><button class="btn btn-primary" onclick="mapSearchPlace()">Search & Pin</button></div>
-        <div class="col-md-3 form-check d-flex align-items-center">
-          <input class="form-check-input me-2" type="checkbox" id="toggleFarmers" onchange="toggleFarmerMarkers()">
-          <label class="form-check-label" for="toggleFarmers">Show registered farmers</label>
+      <h4 class="text-primary mb-3">🗺️ Trader & Farmer Map</h4>
+
+      <div class="row g-3">
+        <!-- Controls Column -->
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h6 class="mb-3">Search & Controls</h6>
+              <div class="mb-2">
+                <input id="mapSearch" class="form-control" placeholder="Search location or market...">
+                <div id="searchSuggestions" class="mt-1" style="max-height:150px;overflow:auto;"></div>
+              </div>
+              <div class="d-grid gap-2 mb-3">
+                <button class="btn btn-primary" onclick="mapSearchPlace()">Search & Pin</button>
+                <button class="btn btn-success" onclick="calculateRoute()">Calculate Route</button>
+                <button class="btn btn-warning" onclick="clearRoute()">Clear Route</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="enableDynamicLocation()">📍 Live Location</button>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="toggleFarmers" onchange="toggleFarmerMarkers()" checked>
+                <label class="form-check-label" for="toggleFarmers">Show Registered Farmers</label>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Map Style</label>
+                <select id="mapStyleSelect" class="form-select" onchange="switchMapStyle(this.value)">
+                  <option value="streets">Detailed Streets</option>
+                  <option value="satellite">High-Resolution Satellite</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Weather Overlay</label>
+                <select id="weatherOverlaySelect" class="form-select" onchange="toggleWeatherOverlay(this.value)">
+                  <option value="none">None</option>
+                  <option value="rain">Rainfall</option>
+                </select>
+              </div>
+              <div id="routeInfo" class="small text-muted"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Column -->
+        <div class="col-lg-8 map-col">
+          <div class="map-wrapper">
+            <div id="map"></div>
+            <div id="mapLegend" style="position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,0.9);padding:8px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.08);font-size:12px;">
+              <div><strong>Legend</strong></div>
+              <div><span style="display:inline-block;width:12px;height:12px;background:#28a745;border-radius:50%;margin-right:6px;"></span> Farmer</div>
+              <div><span style="display:inline-block;width:12px;height:12px;background:var(--brand);border-radius:50%;margin-right:6px;"></span> You</div>
+              <div style="margin-top:6px;"><small class="text-muted">Satellite: high-res imagery</small></div>
+            </div>
+          </div>
         </div>
       </div>
-      <div id="map"></div>
-      <div class="text-muted small mt-2">OpenStreetMap + Nominatim geocoding.</div>
+
+      <p class="text-muted small mt-2">
+        View trader and farmer locations in real time. Toggle farmers, calculate routes, or switch to satellite view.
+      </p>
     </section>
+
 
     <!-- GOVT SCHEMES -->
     <section class="dashboard-card d-none" id="sec-schemes">
@@ -259,7 +327,7 @@
 
     <!-- BROWSER -->
     <section class="dashboard-card d-none" id="sec-browser">
-      <h4 class="text-primary mb-3">🌐 Embedded Browser</h4>
+      <h4 class="text-primary mb-3">Burauza 🌐</h4>
       <ul class="nav nav-pills mb-2">
         <li class="nav-item"><button class="nav-link active" id="tabWeb" onclick="switchWebMode('web')">Web</button></li>
         <li class="nav-item"><button class="nav-link" id="tabSearch" onclick="switchWebMode('search')">Search</button></li>
@@ -360,14 +428,14 @@
             <div class="card-body">
           <h6 class="mb-2">Grain Quality Scanner</h6>
           <p class="small text-muted">Upload or capture an image to automatically detect grain type and scan quality.</p>
-          <!--<div class="mb-2">
+          <div class="mb-2">
             <label class="form-label">Grain Type</label>
             <select id="grainType" class="form-select">
               <option value="auto">Auto-detect</option>
               <option value="wheat">Wheat</option>
               <option value="rice">Rice</option>
               <option value="maize">Maize</option>
-            </select> -->
+            </select>
           </div>
           <h6 class="mb-2">Upload or Capture Grain Image</h6>
               <input type="file" id="grainFile" accept="image/*" class="form-control mb-2">
@@ -388,14 +456,18 @@
           </div>
         </div>
       </div>
-      <div class="mt-3">
-        <h6>Scan History</h6>
-        <div id="scanHistory" class="small"></div>
+      <div class="row g-3 mt-3">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="mb-2">Scan History</h6>
+              <div id="scanHistory"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="text-muted small mt-2">Uses TensorFlow.js for AI-powered grain quality analysis.</div>
-    </section>   
-
-    <!-- NOTIFICATIONS -->
+    </section>
+<!-- NOTIFICATIONS -->
     <section class="dashboard-card d-none" id="sec-notifications">
       <h4 class="text-primary mb-3">Notifications</h4>
       <ul class="list-group" id="notifList"></ul>
@@ -406,6 +478,49 @@
     </section>
 
   </div>
+
+  <!-- PRICE PREDICTION -->
+  <section class="dashboard-card d-none" id="sec-prediction">
+    <h4 class="text-primary mb-3">Price Prediction 📈</h4>
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="mb-2">Predict Crop Price</h6>
+            <p class="small text-muted">Enter crop details to get a price prediction based on market trends.</p>
+            <div class="mb-2">
+              <label class="form-label">Crop Type</label>
+              <select id="predictCropType" class="form-select">
+                <option value="wheat">Wheat</option>
+                <option value="rice">Rice</option>
+                <option value="maize">Maize</option>
+                <option value="soybean">Soybean</option>
+                <option value="cotton">Cotton</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Quantity (kg)</label>
+              <input type="number" id="predictQuantity" class="form-control" min="1" placeholder="Enter quantity">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Location</label>
+              <input id="predictLocation" class="form-control" placeholder="e.g., Mumbai, Maharashtra">
+            </div>
+            <button class="btn btn-primary" onclick="predictPrice()">Predict Price</button>
+            <div id="predictionResult" class="mt-2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="mb-2">Prediction History</h6>
+            <div id="predictionHistory"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- PROFILE MODAL -->
   <div class="modal fade" id="profileModal" tabindex="-1">
@@ -419,12 +534,13 @@
           <div class="mb-2"><label class="form-label">Name</label><input id="m_profName" class="form-control"></div>
           <div class="mb-2"><label class="form-label">Mobile</label><input id="m_profMobile" class="form-control" maxlength="10"></div>
           <div class="mb-2"><label class="form-label">Location</label><input id="m_profLocation" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Profile Picture</label><input type="file" id="profPicFile" class="form-control" accept="image/*"></div>
         </div>
         <div class="modal-footer"><button class="btn btn-primary" type="submit">Save</button></div>
       </form>
     </div>
   </div>
-   <!-- ORDER MODAL -->
+  <!-- ORDER MODAL -->
   <div class="modal fade" id="orderModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -462,6 +578,35 @@
     </div>
   </div>
 
+  <!-- CONTACT MODAL -->
+  <div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form class="modal-content" onsubmit="event.preventDefault(); submitContact(); bootstrap.Modal.getInstance(document.getElementById('contactModal')).hide();">
+        <div class="modal-header">
+          <h5 class="modal-title">Contact Us</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Name</label>
+            <input id="contactName" class="form-control" placeholder="Your name" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Email</label>
+            <input id="contactEmail" class="form-control" type="email" placeholder="your.email@example.com" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Message</label>
+            <textarea id="contactMessage" class="form-control" rows="4" placeholder="Your message..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" type="submit">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- TOASTS -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -469,33 +614,198 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
+    
+    
     /***************
      * STATE
      ***************/
-    let notifs = JSON.parse(localStorage.getItem("notifications_trader") || "[]");
-    let traderOrders = JSON.parse(localStorage.getItem("traderOrders") || "[]");
-    const farmerListings = () => JSON.parse(localStorage.getItem("farmerProducts") || "[]"); // live pull from Farmer
+  const MAPTILER_KEY = "J4ApQMnvSEpc03xhAn3m"; // user-provided key
+  const MAP_STYLE_STREETS = `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`;
+  const MAP_STYLE_SATELLITE = `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`;
+  const ROUTE_SOURCE = 'routeSource', ROUTE_LAYER = 'routeLayer';
+
+  let map = null, mapInitialized = false, searchMarker = null, currentLocation = null;
+
+    let notifs = [];
+    let traderOrders = [];
+    const farmerListings = () => {
+      return JSON.parse(localStorage.getItem("farmerProducts") || "[]");
+    };
     // “Farmer orders” (for mirroring placed orders so farmer sees them)
     const readFarmerOrders = () => JSON.parse(localStorage.getItem("farmerOrders") || "[]");
+
+
+
+    // Encryption functions using Web Crypto API
+    async function deriveKey(passphrase) {
+      const encoder = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(passphrase),
+        'PBKDF2',
+        false,
+        ['deriveKey']
+      );
+      return crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: encoder.encode('KrishiVyaparSalt'),
+          iterations: 100000,
+          hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    }
+
+    async function encryptData(data, passphrase) {
+      const key = await deriveKey(passphrase);
+      const encoder = new TextEncoder();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        encoder.encode(JSON.stringify(data))
+      );
+      return { encrypted: Array.from(new Uint8Array(encrypted)), iv: Array.from(iv) };
+    }
+
+    async function decryptData(encryptedData, passphrase) {
+      const key = await deriveKey(passphrase);
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: new Uint8Array(encryptedData.iv) },
+        key,
+        new Uint8Array(encryptedData.encrypted)
+      );
+      const decoder = new TextDecoder();
+      return JSON.parse(decoder.decode(decrypted));
+    }
+
+    // Load trader data from localStorage first, then sync with server
+    async function loadTraderData() {
+      const passphrase = 'KrishiVyaparSETU2023';
+
+      // Load from localStorage immediately for persistence across refreshes
+      const encOrders = localStorage.getItem("traderOrders");
+      if (encOrders) {
+        try {
+          traderOrders = await decryptData(JSON.parse(encOrders), passphrase);
+        } catch (e) {
+          console.warn('Failed to decrypt traderOrders, using empty array');
+          traderOrders = [];
+        }
+      } else {
+        traderOrders = [];
+      }
+
+      const encNotifs = localStorage.getItem("notifications_trader");
+      if (encNotifs) {
+        try {
+          notifs = await decryptData(JSON.parse(encNotifs), passphrase);
+        } catch (e) {
+          console.warn('Failed to decrypt notifications_trader, using empty array');
+          notifs = [];
+        }
+      } else {
+        notifs = [];
+      }
+
+      // Then try to sync with server
+      try {
+        const response = await fetch('/load_trader_data');
+        if (response.ok) {
+          const data = await response.json();
+          traderOrders = data.orders || [];
+          notifs = data.notifications || [];
+          // Update local storage with server data (encrypted)
+          localStorage.setItem("traderOrders", JSON.stringify(await encryptData(traderOrders, passphrase)));
+          localStorage.setItem("notifications_trader", JSON.stringify(await encryptData(notifs, passphrase)));
+        }
+      } catch (e) {
+        console.warn('Failed to sync trader data with server, using localStorage data:', e);
+      }
+
+      updateKPIs();
+      renderOrders();
+      renderNotifs();
+    }
+
+    // Save trader data to server periodically or on changes
+    async function saveTraderData() {
+      try {
+        const data = {
+          orders: traderOrders,
+          notifications: notifs
+        };
+        const response = await fetch('/save_trader_data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          console.warn('Failed to save trader data to server');
+        }
+      } catch (e) {
+        console.warn('Error saving trader data:', e);
+      }
+    }
 
     // DOM
     const bellBadge = document.getElementById('bellBadge');
     const bellBtn = document.getElementById('bellBtn');
 
     // Section switching
-    const sections = ["overview","browse","orders","weather","map","schemes","browser","chat","grain","notifications"];
-    function openSection(name){
-      // close side menu if open
-      const off = bootstrap.Offcanvas.getInstance(document.getElementById('mainMenu'));
-      if (off) off.hide();
-      sections.forEach(s => document.getElementById('sec-'+s).classList.toggle('d-none', s!==name));
-      if (name==="browse") renderBrowse();
-      if (name==="orders") renderOrders();
-      if (name==="notifications") renderNotifs();
-      if (name==="map") setTimeout(()=> map && map.invalidateSize(), 100);
+    const sections = ["overview","browse","orders",
+    "weather","map","schemes","browser","chat","grain","prediction","plant","notifications"];
+    function openSection(name) {
+  // Close sidebar if open
+  const off = bootstrap.Offcanvas.getInstance(document.getElementById('mainMenu'));
+  if (off) off.hide();
+
+  // Toggle all dashboard sections
+  const sections = ["overview","browse","orders","weather","map","schemes","browser","chat","grain","prediction"];
+  sections.forEach(s => {
+    const el = document.getElementById('sec-' + s);
+    if (el) el.classList.toggle('d-none', s !== name);
+  });
+
+  // Section-specific renderers
+  if(name==='map'){ setTimeout(()=>{ if(!mapInitialized) initMap(); else map.resize(); },220); }
+  if (name === "overview") updateKPIs();
+  if (name === "browse") renderBrowse();
+  if (name === "orders") renderOrders();
+  if (name === "notifications") renderNotifs();
+}
+
+    // Initialize on page load
+    function onLoadInit(){
+      loadProfile();
+      loadTraderData();
+      loadPeers();
+      renderScanHistory();
+      initMap();
+      seedFarmerProductsIfEmpty();
+      seedDemoFarmers();
     }
+
     // default landing
     openSection("overview");
+
+    // Call init on load
+
+
+    onLoadInit();
+    // Auto-get location if not set
+    const profile = JSON.parse(localStorage.getItem("currentTraderProfile") || "{}");
+    if (!profile.location) {
+      getCurrentLocation();
+    }
+    // Auto-fill prediction location if empty
+    if (!document.getElementById('predictLocation').value.trim()) {
+      getPredictionLocation();
+    }
 
     /***************
      * PROFILE
@@ -513,6 +823,24 @@
       // Also register user into shared “users” list for map discovery
       if (p.name && p.location) {
         // Try to geocode once and store coords on the user object
+        async function reverseGeocode(lat, lon) {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+      {
+        headers: {
+          "User-Agent": "KrishiVyaparSETU/1.0 (support@krishivyaparsetu.com)",
+        },
+      }
+    );
+    const j = await r.json();
+    return j.display_name || null;
+  } catch (e) {
+    console.warn("reverseGeocode error", e);
+    return null;
+  }
+}
+
         geocode(p.location).then(g=>{
           const users = JSON.parse(localStorage.getItem("users")||"[]").filter(u=>!(u.role==="trader" && u.mobile===p.mobile));
           users.push({ role:"trader", fullName:p.name, mobile:p.mobile, lat:g?.lat, lon:g?.lon });
@@ -539,7 +867,7 @@
       document.getElementById('m_profLocation').value = p.location;
       setAvatar(p.name);
       document.getElementById('ddName').textContent = p.name || "Trader";
-      showToast("Profile saved.");
+      showToast("Profile saved successfully.");
       loadPeers(); // refresh chat peers
     }
     document.getElementById('logoutBtn').addEventListener('click', ()=> window.location.href="login.html");
@@ -583,10 +911,7 @@
     function renderBrowse(){
       const term = (searchCrop.value||"").toLowerCase().trim();
       const filter = availabilityFilter.value;
-      const rows = farmerListings()
-        .map((p, i)=>({ ...p, _i:i }))
-        .filter(p => (filter==='all' ? true : p.status===filter))
-        .filter(p => term==="" ? true : p.cropName.toLowerCase().includes(term));
+    const rows = (farmerListings()||[]).map((p,i)=>({ ...p, _i:i })).filter(p => (filter==='all'?true:p.status===filter)).filter(p => term===''?true:p.cropName.toLowerCase().includes(term));
       browseTable.innerHTML = "";
       rows.forEach((p, idx)=>{
         const tr = document.createElement('tr');
@@ -655,14 +980,16 @@
       });
       updateKPIs();
     }
-    function persistTraderOrders(){
-      localStorage.setItem("traderOrders", JSON.stringify(traderOrders));
+    async function persistTraderOrders(){
+      const passphrase = 'KrishiVyaparSETU2023';
+      localStorage.setItem("traderOrders", JSON.stringify(await encryptData(traderOrders, passphrase)));
       renderOrders();
       updateKPIs();
+      saveTraderData();
     }
-    function completeOrder(i){
+async function completeOrder(i){
   traderOrders[i].status = "Completed";
-  persistTraderOrders();
+  await persistTraderOrders();
   addNotif(`Order completed: ${traderOrders[i].crop}`, "success");
   // mirror on farmer side if exists
   const fOrders = readFarmerOrders();
@@ -671,33 +998,6 @@
     localStorage.setItem("farmerOrders", JSON.stringify(fOrders));
   }
 }
-
-// Listen for changes in farmerOrders to update traderOrders
-window.addEventListener('storage', (event) => {
-  if (event.key === 'farmerOrders') {
-    const newFarmerOrders = JSON.parse(event.newValue || "[]");
-    let traderOrdersChanged = false;
-
-    traderOrders.forEach((tOrder, tIdx) => {
-      if (tOrder.mirrorId != null && newFarmerOrders[tOrder.mirrorId]) {
-        const fOrder = newFarmerOrders[tOrder.mirrorId];
-        if (tOrder.status !== fOrder.status) {
-          tOrder.status = fOrder.status;
-          traderOrdersChanged = true;
-          if (fOrder.status === "Accepted") {
-            addNotif(`Order for ${tOrder.crop} has been Accepted by farmer.`, "success");
-          } else if (fOrder.status === "Declined") {
-            addNotif(`Order for ${tOrder.crop} has been Declined by farmer.`, "warning");
-          }
-        }
-      }
-    });
-
-    if (traderOrdersChanged) {
-      persistTraderOrders(); // Re-render and save if any status changed
-    }
-  }
-});
 
     function deleteOrder(i){
       if(!confirm("Delete this order?")) return;
@@ -715,11 +1015,37 @@ window.addEventListener('storage', (event) => {
 
     // Quick order modal (inline, no Bootstrap modal to keep simple)
     function openOrderModal(cropName, pricePerKg){
-      const qty = prompt(`Enter quantity (kg) for ${cropName} @ ₹${pricePerKg}/kg:`, "100");
-      if (qty===null) return;
-      const q = parseFloat(qty);
-      if (!q || q<=0){ alert("Enter a valid quantity."); return; }
-      placeOrder(cropName, q, pricePerKg);
+      // Populate modal fields
+      document.getElementById('orderCropName').textContent = cropName;
+      document.getElementById('orderPrice').textContent = `₹${pricePerKg}`;
+      const farmerListingsData = farmerListings();
+      const cropData = farmerListingsData.find(item => item.cropName === cropName);
+      if (cropData) {
+        document.getElementById('orderAvailableQty').textContent = `${cropData.quantity} kg`;
+      }
+      document.getElementById('orderQty').value = '';
+      updateOrderTotal();
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById('orderModal'));
+      modal.show();
+    }
+    function updateOrderTotal(){
+      const qty = parseFloat(document.getElementById('orderQty').value) || 0;
+      const price = parseFloat(document.getElementById('orderPrice').textContent.replace('₹', '')) || 0;
+      const total = qty * price;
+      document.getElementById('orderTotal').textContent = `₹${total.toFixed(2)}`;
+    }
+    function submitOrder(){
+      const cropName = document.getElementById('orderCropName').textContent;
+      const qty = parseFloat(document.getElementById('orderQty').value);
+      const price = parseFloat(document.getElementById('orderPrice').textContent.replace('₹', ''));
+      if (!qty || qty <= 0) {
+        alert("Enter a valid quantity.");
+        return;
+      }
+      placeOrder(cropName, qty, price);
+      // Close modal
+      bootstrap.Modal.getInstance(document.getElementById('orderModal')).hide();
     }
    function placeOrder(crop, qty, price){
   const prof = JSON.parse(localStorage.getItem("currentTraderProfile")||"{}");
@@ -882,62 +1208,192 @@ window.addEventListener('storage', (event) => {
       }catch(e){ alert("Weather fetch failed."); }
     }
 
-    /***************
-     * MAPS (Leaflet + Nominatim)
-     ***************/
-    let map, searchMarker, farmerMarkers=[];
-    function initMap(){
-      map = L.map('map').setView([22.9734,78.6569],5);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(map);
 
-      // Own location (if allowed)
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(pos=>{
-          const {latitude, longitude} = pos.coords;
-          map.setView([latitude, longitude], 12);
-          L.marker([latitude, longitude]).addTo(map).bindPopup("You are here").openPopup();
-        }, ()=>{});
-      }
+  // ============================================================
+  // Geocoding (Nominatim)
+  // ============================================================
+  async function geocode(place){ try{ const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`); const json=await r.json(); if(json.length){ const {lat, lon, display_name}=json[0]; return { lat:parseFloat(lat), lon:parseFloat(lon), display_name }; } } catch(e){ console.warn('geocode err', e); } return null; }
 
-      // If profile has location, pin it
-      const p = JSON.parse(localStorage.getItem("currentTraderProfile") || "{}");
-      if (p.location){
-        geocode(p.location).then(g=>{
-          if(g) L.marker([g.lat,g.lon]).addTo(map).bindPopup("Profile Location<br>"+g.display_name);
-        });
+  // ============================================================
+  // Map (MapLibre) Initialization & functions
+  // ============================================================
+function initMap(){
+  if(mapInitialized) return;
+
+  map = new maplibregl.Map({
+    container: 'map',
+    style: MAP_STYLE_STREETS,
+    center: [83.89263, 18.30255],
+    zoom: 6
+  });
+
+  map.addControl(new maplibregl.NavigationControl(), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }));
+
+  map.on('load', () => {
+    map.resize();
+
+    // ✅ Step 4: Auto-enable dynamic location tracking
+    if (navigator.geolocation) {
+      enableDynamicLocation();
+    } else {
+      console.warn("Geolocation not supported on this browser.");
+    }
+
+    // build users source geojson
+    const users = (JSON.parse(localStorage.getItem('users')||'[]')).filter(u=>u.lat && u.lon).map((u,i)=>({ type:'Feature', properties:{ id:i, fullName:u.fullName || '', role:u.role || '', location:u.location || '' }, geometry:{ type:'Point', coordinates:[u.lon, u.lat] } }));
+    const usersGeoJSON = { type:'FeatureCollection', features: users };
+    try{ if(map.getLayer('clusters')) map.removeLayer('clusters'); if(map.getLayer('cluster-count')) map.removeLayer('cluster-count'); if(map.getLayer('unclustered-point')) map.removeLayer('unclustered-point'); if(map.getSource('users')) map.removeSource('users'); }catch(e){}
+    map.addSource('users', { type:'geojson', data: usersGeoJSON, cluster:true, clusterMaxZoom: 14, clusterRadius: 50 });
+    map.addLayer({ id:'clusters', type:'circle', source:'users', filter:['has','point_count'], paint:{ 'circle-color':['step',['get','point_count'],'#51bbd6',10,'#f1f075',30,'#f28cb1'], 'circle-radius':['step',['get','point_count'],15,10,20,30,25] } });
+    map.addLayer({ id:'cluster-count', type:'symbol', source:'users', filter:['has','point_count'], layout:{ 'text-field':'{point_count_abbreviated}', 'text-font':['Open Sans Bold','Arial Unicode MS Bold'], 'text-size':12 } });
+    map.addLayer({ id:'unclustered-point', type:'circle', source:'users', filter:['!', ['has','point_count']], paint:{ 'circle-color':['case',['==',['get','role'],'farmer'],'#28a745','var(--brand)'], 'circle-radius':10, 'circle-stroke-width':2, 'circle-stroke-color':'#ffffff' } });
+    map.on('click', 'unclustered-point', (e)=>{ const feat = e.features[0]; const props = feat.properties; const coords = feat.geometry.coordinates.slice(); const html = `<strong>${escapeHtml(props.fullName || 'User')}</strong><div class='tiny'>${escapeHtml(props.role || '')} • ${escapeHtml(props.location || '')}</div>`; new maplibregl.Popup().setLngLat(coords).setHTML(html).addTo(map); });
+    map.on('click', 'clusters', (e)=>{ const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] }); const clusterId = features[0].properties.cluster_id; map.getSource('users').getClusterExpansionZoom(clusterId, (err, zoom)=>{ if(err) return; map.easeTo({ center: features[0].geometry.coordinates, zoom }); }); });
+    // route source
+    if(!map.getSource(ROUTE_SOURCE)) map.addSource(ROUTE_SOURCE, { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+    if(!map.getLayer(ROUTE_LAYER)) map.addLayer({ id:ROUTE_LAYER, type:'line', source:ROUTE_SOURCE, layout:{ 'line-join':'round','line-cap':'round' }, paint:{ 'line-color':'#1976d2','line-width':6,'line-opacity':0.9 } });
+    // initial markers
+    try{ const p = JSON.parse(localStorage.getItem('currentTraderProfile')||'{}'); if(p.location) geocode(p.location).then(g=>{ if(g) addUserMarker(g.lat, g.lon, p.name||'Trader'); }); if(navigator.geolocation) navigator.geolocation.getCurrentPosition(pos=>{ currentLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude }; addUserMarker(currentLocation.lat, currentLocation.lon, 'Me'); map.flyTo({ center:[currentLocation.lon, currentLocation.lat], zoom: 12 }); }, ()=>{}); }catch(e){ console.warn('init markers err', e); }
+  }); 
+  mapInitialized = true; }
+
+  function addUserMarker(lat, lon, title='You'){ const el=document.createElement('div'); el.style.cssText='width:14px;height:14px;border-radius:50%;background:var(--brand);border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);'; new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).setPopup(new maplibregl.Popup({ offset:10 }).setText(title)).addTo(map); }
+
+async function mapSearchPlace(){
+  const q = document.getElementById('mapSearch').value.trim();
+  if (!q) return alert('Enter a place name.');
+
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`,
+      {
+        headers: {
+          "User-Agent": "KrishiVyaparSETU/1.0 (support@krishivyaparsetu.com)",
+          "Accept-Language": "en"
+        }
       }
+    );
+
+    const data = await r.json();
+    console.log("Nominatim response:", data);
+
+    if (!data.length) {
+      alert('No results found — try another place or check internet connection.');
+      return;
     }
-    async function geocode(q){
-      try{
-        const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language':'en' } });
-        const j = await r.json();
-        if(!j || !j.length) return null;
-        const p = j[0];
-        return { lat: parseFloat(p.lat), lon: parseFloat(p.lon), display_name: p.display_name };
-      }catch(e){ return null; }
+
+    const loc = data[0];
+    const lng = parseFloat(loc.lon), lat = parseFloat(loc.lat);
+
+    // Remove previous marker
+    if (searchMarker) searchMarker.remove();
+
+    // Create a new marker for search result
+    const el = document.createElement('div');
+    el.style.cssText =
+      'width:20px;height:20px;border-radius:50%;background:#ff5722;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);';
+    searchMarker = new maplibregl.Marker({ element: el })
+      .setLngLat([lng, lat])
+      .addTo(map);
+    searchMarker.setPopup(
+      new maplibregl.Popup({ offset: 12 }).setHTML(`<b>${loc.display_name}</b>`)
+    ).togglePopup();
+
+    // Center map on result
+    map.flyTo({ center: [lng, lat], zoom: 12 });
+
+    // Show search suggestion below input
+    const sug = document.getElementById('searchSuggestions');
+    if (sug) {
+      sug.innerHTML = '';
+      const item = document.createElement('div');
+      item.className = 'small text-muted';
+      item.textContent = loc.display_name;
+      sug.appendChild(item);
     }
-    async function mapSearchPlace(){
-      const q = document.getElementById('mapSearch').value.trim();
-      if(!q){ alert("Enter a place to search."); return; }
-      const g = await geocode(q);
-      if(!g){ alert("Place not found."); return; }
-      if(searchMarker) map.removeLayer(searchMarker);
-      searchMarker = L.marker([g.lat,g.lon]).addTo(map).bindPopup(g.display_name);
-      map.setView([g.lat,g.lon],14);
-    }
-    function toggleFarmerMarkers(){
-      farmerMarkers.forEach(m=>map.removeLayer(m));
-      farmerMarkers = [];
-      if (!document.getElementById('toggleFarmers').checked) return;
-      const users = JSON.parse(localStorage.getItem("users")||"[]").filter(u=>u.role==="farmer");
-      users.forEach(u=>{
-        if(u.lat && u.lon){
-          const mk = L.marker([u.lat, u.lon]).addTo(map).bindPopup(`${u.fullName||'Farmer'}<br/>${u.mobile||''}`);
-          farmerMarkers.push(mk);
+
+  } catch (e) {
+    console.warn('Search error:', e);
+    alert('Search failed. Please check your internet or try again later.');
+  }
+}
+
+  async function calculateRoute(){ if(!searchMarker) return alert('Search and pin a destination first.'); if(!currentLocation){ const p=JSON.parse(localStorage.getItem('currentTraderProfile')||'{}'); if(p.location){ const g=await geocode(p.location); if(g) currentLocation={ lat:g.lat, lon:g.lon }; } if(!currentLocation) return alert('No origin available. Enable geolocation or set profile location.'); } const dest = searchMarker.getLngLat(); const coords = `${currentLocation.lon},${currentLocation.lat};${dest.lng},${dest.lat}`; try{ const resp = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`); const json = await resp.json(); if(!json.routes||!json.routes.length) return alert('No route found'); const route = json.routes[0].geometry; if(map.getSource(ROUTE_SOURCE)) map.getSource(ROUTE_SOURCE).setData({ type:'FeatureCollection', features:[{ type:'Feature', geometry: route }]}); else { map.addSource(ROUTE_SOURCE, { type:'geojson', data:{ type:'FeatureCollection', features:[{ type:'Feature', geometry: route }] } }); map.addLayer({ id:ROUTE_LAYER, type:'line', source:ROUTE_SOURCE, layout:{ 'line-join':'round','line-cap':'round' }, paint:{ 'line-color':'#1976d2','line-width':6 } }); } const bbox=turf.bbox(route); map.fitBounds([[bbox[0], bbox[1]],[bbox[2], bbox[3]]], { padding:40 }); document.getElementById('routeInfo').textContent = `Distance: ${(json.routes[0].distance/1000).toFixed(2)} km — Duration: ${(json.routes[0].duration/60).toFixed(0)} min`; }catch(e){ console.warn('route err', e); alert('Routing failed'); } }
+
+  function clearRoute(){ try{ if(map.getSource(ROUTE_SOURCE)) map.getSource(ROUTE_SOURCE).setData({ type:'FeatureCollection', features:[] }); document.getElementById('routeInfo').textContent=''; }catch(e){ console.warn('clear route', e); } }
+  function locateMe(){ if(!navigator.geolocation) return alert('Geolocation not supported'); navigator.geolocation.getCurrentPosition(pos=>{ currentLocation={ lat:pos.coords.latitude, lon:pos.coords.longitude }; addUserMarker(currentLocation.lat, currentLocation.lon, 'My location'); map.flyTo({ center:[currentLocation.lon, currentLocation.lat], zoom:12 }); }, ()=> alert('Unable to get your location.')); }
+  async function enableDynamicLocation() {
+ if (!navigator.geolocation) {
+  alert("Geolocation not supported. Using IP-based lookup...");
+  const res = await fetch("https://ipapi.co/json/");
+  const j = await res.json();
+  const { latitude, longitude, city } = j;
+  map.flyTo({ center: [longitude, latitude], zoom: 10 });
+
+  const el = document.createElement("div");
+  el.style.cssText = "width:16px;height:16px;border-radius:50%;background:#0d6efd;border:2px solid white;";
+  window.dynamicMarker = new maplibregl.Marker({ element: el })
+    .setLngLat([longitude, latitude])
+    .setPopup(new maplibregl.Popup({ offset: 10 }).setText(city || "Approximate location"))
+    .addTo(map);
+}
+(async () => {
+  try {
+    const res = await fetch("https://ipapi.co/json/");
+    const j = await res.json();
+    const { latitude, longitude, city } = j;
+    map.flyTo({ center: [longitude, latitude], zoom: 10 });
+    new maplibregl.Marker().setLngLat([longitude, latitude]).addTo(map);
+    alert(`Using approximate location: ${city}`);
+  } catch (e) {
+    alert("Could not get approximate location either.");
+  }
+})();
+
+
+
+  navigator.geolocation.watchPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      currentLocation = { lat: latitude, lon: longitude };
+
+      // Update or add marker
+      if (window.dynamicMarker) window.dynamicMarker.remove();
+      const el = document.createElement("div");
+      el.style.cssText =
+        "width:16px;height:16px;border-radius:50%;background:#0d6efd;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);";
+      window.dynamicMarker = new maplibregl.Marker({ element: el })
+        .setLngLat([longitude, latitude])
+        .setPopup(new maplibregl.Popup({ offset: 10 }).setText("📍 Live Position"))
+        .addTo(map);
+
+      // Center map smoothly
+      map.flyTo({ center: [longitude, latitude], zoom: 12 });
+
+      // Optionally update profile location field (city detection)
+      reverseGeocode(latitude, longitude).then((locName) => {
+        if (locName) {
+          document.getElementById("profLocation").value = locName;
+          const prof = JSON.parse(localStorage.getItem("currentTraderProfile") || "{}");
+          prof.location = locName;
+          localStorage.setItem("currentTraderProfile", JSON.stringify(prof));
         }
       });
-      if(!farmerMarkers.length) showToast("No farmer locations with coordinates yet.", "warning");
-    }
+    },
+    (err) => {
+      console.warn("Geo error:", err);
+      alert("Unable to access live location. Please enable GPS.");
+    },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+  );
+}
+
+  function switchMapStyle(v){ if(!map) return; if(v==='satellite'){ map.setStyle(MAP_STYLE_SATELLITE); } else { map.setStyle(MAP_STYLE_STREETS); } }
+  function toggleWeatherOverlay(v){ if(v==='none'){ if(map.getLayer('weatherLayer')){ try{ map.removeLayer('weatherLayer'); map.removeSource('weatherSource'); }catch(e){} } return; } if(v==='rain'){ if(map.getSource('weatherSource')){ try{ map.removeLayer('weatherLayer'); map.removeSource('weatherSource'); }catch(e){} } map.addSource('weatherSource', { type:'raster', tiles:[ 'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY' ], tileSize:256 }); map.addLayer({ id:'weatherLayer', type:'raster', source:'weatherSource', paint:{ 'raster-opacity':0.6 } }); } }
+  function refreshClusters(){ if(!map || !map.getSource) return; const users = JSON.parse(localStorage.getItem('users')||'[]').filter(u=>u.lat && u.lon).map((u,i)=>({ type:'Feature', properties:{ id:i, fullName:u.fullName||'', role:u.role||'', location:u.location||'' }, geometry:{ type:'Point', coordinates:[u.lon, u.lat] } })); const usersGeoJSON={ type:'FeatureCollection', features: users }; try{ if(map.getSource('users')) map.getSource('users').setData(usersGeoJSON); }catch(e){ console.warn('refresh clusters error', e); } }
+  function toggleFarmerMarkers(){ if(!map) return; const checked=document.getElementById('toggleFarmers').checked; try{ map.setLayoutProperty('clusters', 'visibility', checked? 'visible' : 'none'); map.setLayoutProperty('cluster-count', 'visibility', checked? 'visible' : 'none'); map.setLayoutProperty('unclustered-point', 'visibility', checked? 'visible' : 'none'); }catch(e){ console.warn('toggleFarmerMarkers', e); } }
+
 
     /***************
      * EMBEDDED BROWSER
@@ -1156,6 +1612,9 @@ window.addEventListener('storage', (event) => {
         }catch(e){ /* ignore race */ }
       }
     };
+
+
+    
      /***************
      * GRAIN QUALITY SCANNER
      ***************/
@@ -1347,42 +1806,36 @@ window.addEventListener('storage', (event) => {
 
 
     /***************
-     * UTIL: Toasts
+     * MISSING FUNCTIONS
      ***************/
-    function showToast(msg, type="success"){
-      const id = "t_"+Date.now();
-      const el = document.createElement('div');
-      el.className = "toast align-items-center text-bg-"+(type==="success"?"success":(type==="warning"?"warning":"secondary"))+" border-0";
-      el.id = id;
-      el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
-      document.getElementById('toastContainer').appendChild(el);
-      new bootstrap.Toast(el, { delay: 2500 }).show();
-      setTimeout(()=>el.remove(), 3500);
-    }
-    /***************
-     * UTIL: Safe Parse
-     ***************/
-    function safeParse(jsonString, defaultValue = null) {
-      try {
-        return JSON.parse(jsonString);
-      } catch (e) {
-        return defaultValue;
-      }
+    function showToast(message, type = "success") {
+      const container = document.getElementById('toastContainer');
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      `;
+      container.appendChild(toastEl);
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+      toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
     }
 
-    /***************
-     * EXPORT/IMPORT DATA
-     ***************/
-    function exportTraderData(){
+    function exportLocalDB() {
       const data = {
-        profile: safeParse(localStorage.getItem("currentTraderProfile"), {}),
-        orders: traderOrders,
+        traderProfile: JSON.parse(localStorage.getItem("currentTraderProfile") || "{}"),
+        traderOrders: traderOrders,
         notifications: notifs,
-        grainScanHistory: safeParse(localStorage.getItem("grainScanHistory"), []),
-        users: safeParse(localStorage.getItem("users"), []),
-        farmerProducts: safeParse(localStorage.getItem("farmerProducts"), []),
-        farmerOrders: safeParse(localStorage.getItem("farmerOrders"), []),
-        farmerNotifications: safeParse(localStorage.getItem("notifications"), [])
+        farmerProducts: farmerListings(),
+        farmerOrders: readFarmerOrders(),
+        users: JSON.parse(localStorage.getItem("users") || "[]"),
+        grainScanHistory: JSON.parse(localStorage.getItem('grainScanHistory') || '[]')
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -1391,114 +1844,132 @@ window.addEventListener('storage', (event) => {
       a.download = 'trader_backup.json';
       a.click();
       URL.revokeObjectURL(url);
-      showToast("Data exported successfully.");
+      showToast("Backup exported successfully!");
     }
 
-    function importTraderData(){
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          try {
-            const data = JSON.parse(ev.target.result);
-            if (data.profile) localStorage.setItem("currentTraderProfile", JSON.stringify(data.profile));
-            if (data.orders) localStorage.setItem("traderOrders", JSON.stringify(data.orders));
-            if (data.notifications) localStorage.setItem("notifications_trader", JSON.stringify(data.notifications));
-            if (data.grainScanHistory) localStorage.setItem("grainScanHistory", JSON.stringify(data.grainScanHistory));
-            if (data.users) localStorage.setItem("users", JSON.stringify(data.users));
-            if (data.farmerProducts) localStorage.setItem("farmerProducts", JSON.stringify(data.farmerProducts));
-            if (data.farmerOrders) localStorage.setItem("farmerOrders", JSON.stringify(data.farmerOrders));
-            if (data.farmerNotifications) localStorage.setItem("notifications", JSON.stringify(data.farmerNotifications));
-            // Reload data
-            traderOrders = safeParse(localStorage.getItem("traderOrders"), []);
-            notifs = safeParse(localStorage.getItem("notifications_trader"), []);
-            loadProfile();
-            updateKPIs();
-            renderBrowse();
-            renderOrders();
-            renderNotifs();
-            loadPeers();
-            renderChat();
-            renderScanHistory();
-            showToast("Data imported successfully. Page reloaded.");
-          } catch (err) {
-            showToast("Invalid file format.", "warning");
-          }
-        };
-        reader.readAsDataURL(file);
-      };
-      input.click();
-    }
-
-    /***************
-     * PRESENCE FOR CHAT
-     ***************/
-    const PRESENCE_CHANNEL = new BroadcastChannel('ftc_presence');
-    let onlinePeers = new Set();
-
-    function sendPresence(){
-      PRESENCE_CHANNEL.postMessage({ type: 'online', role: 'trader', id: 'trader_' + Date.now() });
-    }
-
-    PRESENCE_CHANNEL.onmessage = (ev) => {
-      const msg = ev.data || {};
-      if (msg.type === 'online' && msg.role === 'farmer') {
-        onlinePeers.add(msg.id);
-        updateChatPresence();
-        setTimeout(() => {
-          onlinePeers.delete(msg.id);
-          updateChatPresence();
-        }, 10000); // Assume offline after 10s no ping
+    function seedFarmerProductsIfEmpty() {
+      let products = JSON.parse(localStorage.getItem("farmerProducts") || "[]");
+      if (products.length === 0) {
+        products = [
+          { cropName: "Wheat", quantity: 100, price: 20, status: "Available", imageUrl: "" },
+          { cropName: "Rice", quantity: 50, price: 25, status: "Available", imageUrl: "" },
+          { cropName: "Maize", quantity: 80, price: 18, status: "Available", imageUrl: "" }
+        ];
+        localStorage.setItem("farmerProducts", JSON.stringify(products));
+        showToast("Demo farmer products seeded!");
       }
-    };
+    }
 
-    function updateChatPresence(){
-      const peerSelect = document.getElementById('chatPeer');
-      const selected = peerSelect.value;
-      Array.from(peerSelect.options).forEach(opt => {
-        if (opt.value) {
-          opt.textContent = opt.textContent.replace(' (Online)', '').replace(' (Offline)', '');
-          // Simple check: if any peer online, mark as online (since we don't know which)
-          if (onlinePeers.size > 0) {
-            opt.textContent += ' (Online)';
-          } else {
-            opt.textContent += ' (Offline)';
-          }
-        }
+    function seedDemoFarmers() {
+      let users = JSON.parse(localStorage.getItem("users") || "[]");
+      if (users.filter(u => u.role === "farmer").length === 0) {
+        users.push(
+          { role: "farmer", fullName: "Rajesh Kumar", mobile: "9876543210", lat: 28.6139, lon: 77.2090, location: "Delhi, India" },
+          { role: "farmer", fullName: "Amit Singh", mobile: "9876543211", lat: 19.0760, lon: 72.8777, location: "Mumbai, India" },
+          { role: "farmer", fullName: "Suresh Patel", mobile: "9876543212", lat: 13.0827, lon: 80.2707, location: "Chennai, India" }
+        );
+        localStorage.setItem("users", JSON.stringify(users));
+        showToast("Demo farmers seeded for map!");
+      }
+    }
+
+    function submitContact() {
+      const name = document.getElementById('contactName').value.trim();
+      const email = document.getElementById('contactEmail').value.trim();
+      const message = document.getElementById('contactMessage').value.trim();
+      if (!name || !email || !message) {
+        showToast("Please fill all fields.", "warning");
+        return;
+      }
+      // Simulate sending (in real app, send to server)
+      showToast("Message sent successfully! We will get back to you soon.");
+      // Clear form
+      document.getElementById('contactName').value = '';
+      document.getElementById('contactEmail').value = '';
+      document.getElementById('contactMessage').value = '';
+    }
+
+
+    // Get prediction location from profile
+    function getPredictionLocation() {
+      const p = JSON.parse(localStorage.getItem("currentTraderProfile") || "{}");
+      if (p.location) {
+        document.getElementById('predictLocation').value = p.location;
+      }
+    }
+
+    // Price prediction model
+    let predictionModel = null;
+
+    async function trainPredictionModel() {
+      if (predictionModel) return;
+      // Synthetic data for training
+      const crops = ['wheat', 'rice', 'maize', 'soybean', 'cotton'];
+      const data = [];
+      for (let i = 0; i < 100; i++) {
+        const crop = crops[Math.floor(Math.random() * crops.length)];
+        const quantity = Math.random() * 100 + 10; // 10-110 kg
+        const locationFactor = Math.random() * 0.5 + 0.75; // 0.75-1.25
+        const basePrice = { wheat: 20, rice: 25, maize: 18, soybean: 30, cotton: 35 }[crop];
+        const price = basePrice * locationFactor * (1 + Math.random() * 0.2 - 0.1); // variation
+        data.push({ crop, quantity, locationFactor, price });
+      }
+      // Encode crop
+      const cropIndex = crops.reduce((acc, c, i) => { acc[c] = i; return acc; }, {});
+      const xs = tf.tensor2d(data.map(d => [cropIndex[d.crop], d.quantity, d.locationFactor]));
+      const ys = tf.tensor2d(data.map(d => [d.price]));
+      predictionModel = tf.sequential();
+      predictionModel.add(tf.layers.dense({ inputShape: [3], units: 10, activation: 'relu' }));
+      predictionModel.add(tf.layers.dense({ units: 1 }));
+      predictionModel.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
+      await predictionModel.fit(xs, ys, { epochs: 50, verbose: 0 });
+      showToast("Prediction model trained.");
+    }
+
+    async function predictPrice() {
+      await trainPredictionModel();
+      const cropType = document.getElementById('predictCropType').value;
+      const quantity = parseFloat(document.getElementById('predictQuantity').value);
+      const location = document.getElementById('predictLocation').value.trim();
+      if (!cropType || !quantity || !location) {
+        showToast("Please fill all fields.", "warning");
+        return;
+      }
+      // Simple location factor
+      const locationFactor = location.toLowerCase().includes('mumbai') ? 1.2 : location.toLowerCase().includes('delhi') ? 1.1 : 0.9;
+      const crops = ['wheat', 'rice', 'maize', 'soybean', 'cotton'];
+      const cropIndex = crops.indexOf(cropType);
+      const input = tf.tensor2d([[cropIndex, quantity, locationFactor]]);
+      const pred = predictionModel.predict(input);
+      const predictedPriceKg = pred.dataSync()[0];
+      const total = predictedPriceKg * quantity;
+      document.getElementById('predictionResult').innerHTML = `<div class="alert alert-success">Predicted Price: ₹${predictedPriceKg.toFixed(2)}/kg<br>Total: ₹${total.toFixed(2)}</div>`;
+      // Save to history
+      const history = JSON.parse(localStorage.getItem('predictionHistory') || '[]');
+      history.push({
+        cropType,
+        quantity,
+        location,
+        predictedPriceKg: predictedPriceKg.toFixed(2),
+        total: total.toFixed(2),
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('predictionHistory', JSON.stringify(history));
+      renderPredictionHistory();
+    }
+
+    function renderPredictionHistory() {
+      const history = JSON.parse(localStorage.getItem('predictionHistory') || '[]');
+      const div = document.getElementById('predictionHistory');
+      div.innerHTML = '';
+      if (!history.length) {
+        div.innerHTML = '<div>No predictions yet.</div>';
+        return;
+      }
+      history.slice(-5).forEach(h => {
+        div.innerHTML += `<div class="mb-1">${h.cropType} (${h.quantity}kg) @ ${h.location}: ₹${h.predictedPriceKg}/kg (Total: ₹${h.total}) on ${new Date(h.timestamp).toLocaleString()}</div>`;
       });
     }
-
-
-    /***************
-     * INIT
-     ***************/
-    function onLoadInit(){
-      // Landing view
-      openSection('overview');
-      // Profile
-      loadProfile();
-      // KPIs
-      updateKPIs();
-      // Browse
-      renderBrowse();
-      // Orders
-      renderOrders();
-      // Notifications
-      renderNotifs();
-      // Map
-      initMap();
-      // Browser
-      document.getElementById('browserUrl').value = HOME_URL;
-      (document.getElementById('browserFrame').src = HOME_URL);
-      // Chat peers
-      loadPeers();
-      renderChat();
-    }
-    window.addEventListener('load', onLoadInit);
   </script>
 </body>
 </html>
