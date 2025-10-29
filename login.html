@@ -1,542 +1,704 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - FarmTrade Connect</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - KrishiVyaparSETU</title>
+
+  <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
+
+  <!-- Font Awesome (for eye icons) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
   <style>
+    /* Page background (replace or remove URL if not needed) */
     body {
-      background: url("assets/images/bg.jpg") no-repeat center center fixed;
+      background: url("/static/assets/images/bg.jpg") no-repeat center center fixed;
       background-size: cover;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .role-button {
+    /* Card */
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255, 255, 255, 0.541);
+      border-radius: 12px;
+      padding: 1.75rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    .logo {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      display:block;
+      margin: 0 auto 12px auto;
+      object-fit: cover;
+      border: 3px solid #28a745;
+    }
+
+    /* Role buttons */
+        .role-button {
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .role-button.selected {
       transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.5);
-      background-color: #28a745; /* Green background for selected */
-      color: white; /* White text for selected */
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.7);
+      background-color: #28a745 !important;
+      color: white !important;
     }
 
     .role-button:not(.selected) {
-      background-color: #ffffff; /* White background for unselected */
-      color: #28a745; /* Green text for unselected */
+      background-color: #ffffff;
+      color: #28a745;
     }
 
     .role-button:hover {
       cursor: pointer;
       box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
     }
-    .logo {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 50%; /* ✅ circular shape */
-      display: block;
-      margin: 0 auto 15px auto;
-      border: 3px solid #28a745; /* optional green border */
-    }
-
-    /* Password visibility toggle */
-    .password-toggle {
-      position: relative;
-    }
-    .password-toggle-icon {
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      cursor: pointer;
-      color: #28a745;
-    }
-
-    /* Inline error message styling */
     .error-message {
       color: #dc3545;
-      font-size: 0.875em;
-      margin-top: 0.25rem;
+      font-size: .875rem;
+      margin-top: .35rem;
     }
 
-    /* Modal styles */
-    .modal-backdrop.show {
-      opacity: 0.5;
+    /* Input-group adjustments so icon looks inline inside input */
+    .input-group .form-control {
+      border-right: 0;
+    }
+    .input-group .input-group-text {
+      background: transparent;
+      border-left: 0;
+      cursor: pointer;
+      color: #6c757d;
+    }
+    .input-group:focus-within .input-group-text {
+      color: #198754;
+    }
+
+    /* Toasts */
+    .toast-container-custom {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 1100;
+    }
+    .custom-toast {
+      background-color: #198754;
+      color: #fff;
+      padding: .6rem .9rem;
+      border-radius: .5rem;
+      margin-bottom: .5rem;
+      transform: translateY(-8px);
+      opacity: 0;
+      transition: transform .22s, opacity .22s;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+    }
+    .custom-toast.show { transform: translateY(0); opacity: 1; }
+    .custom-toast.error { background: #dc3545; }
+
+    @media (max-width: 480px) {
+      .login-card { margin: 12px; padding: 1rem; }
     }
   </style>
 </head>
-<body class="bg-light">
-  <div class="container text-start mt-3">
+<body>
+   <div class="container text-start" style="position: absolute; top: 50px; left: 50%; transform: translateX(-50%); max-width: 820px; z-index: 1;">
     <button class="btn btn-outline-secondary btn-sm" onclick="history.back()">⬅ Back</button>
   </div>
+  <div class="login-card">
+    <img src="/static/assets/images/logo.jpg" alt="KrishiVyaparSETU Logo" class="logo" />
+    <h3 class="text-center text-success mb-3">Login</h3>
 
-  <div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <!-- ✅ Changed background opacity to 70% -->
-    <div class="card shadow-lg p-4" style="width: 25rem; background: rgba(255,255,255,0.7);">
-      <img src="assets/images/logo.png" alt="FarmTrade Logo" class="logo" />
-
-      <h2 class="text-center text-success mb-3">Login</h2>
-
-      <div class="mb-3 text-center" role="radiogroup" aria-label="Select user role">
-        <button
-          type="button"
-          class="btn btn-sm role-button me-2"
-          onclick="setRole('farmer')"
-          id="role-farmer"
-          aria-pressed="false"
-          tabindex="0"
-        >
-          Farmer
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm role-button"
-          onclick="setRole('trader')"
-          id="role-trader"
-          aria-pressed="false"
-          tabindex="0"
-        >
-          Trader
-        </button>
-        <div id="role-error" class="error-message visually-hidden">Please select a role.</div>
-      </div>
-
-      <form id="login-form" novalidate>
-        <div class="mb-3">
-          <label for="username" class="form-label">Email / Username</label>
-          <input
-            type="text"
-            id="username"
-            class="form-control"
-            required
-            aria-describedby="usernameHelp"
-            aria-invalid="false"
-            autocomplete="username"
-          />
-          <div id="username-error" class="error-message visually-hidden">Please enter a valid email or username.</div>
-        </div>
-        <div class="mb-3 password-toggle">
-          <label for="password" class="form-label">Password</label>
-          <input
-            type="password"
-            id="password"
-            class="form-control"
-            required
-            aria-describedby="passwordHelp"
-            aria-invalid="false"
-            autocomplete="current-password"
-            minlength="6"
-          />
-          <span
-            class="password-toggle-icon"
-            role="button"
-            tabindex="0"
-            aria-label="Toggle password visibility"
-            onclick="togglePasswordVisibility()"
-            onkeydown="if(event.key==='Enter' || event.key===' ') togglePasswordVisibility()"
-          >
-            👁️
-          </span>
-          <div id="password-error" class="error-message visually-hidden">
-            Password must be at least 6 characters.
-          </div>
-        </div>
-        <button type="submit" class="btn btn-success w-100" id="login-btn" aria-live="polite">
-          Login
-        </button>
-      </form>
-
-      <div class="text-center mt-2">
-        <button
-          type="button"
-          class="btn btn-link p-0"
-          id="forgot-password-btn"
-          aria-haspopup="dialog"
-          aria-controls="forgotPasswordModal"
-          aria-expanded="false"
-          onclick="openForgotPasswordModal()"
-        >
-          Forgot Password?
-        </button>
-      </div>
-
-      <p class="text-center mt-3">
-        Don't have an account? <a href="register.html">Register</a>
-      </p>
+    <!-- Role selection -->
+    <div class="mb-3 text-center" role="radiogroup" aria-label="Select role">
+      <button type="button" class="btn btn-sm role-button me-2" id="role-farmer" aria-pressed="false">Farmer</button>
+      <button type="button" class="btn btn-sm role-button" id="role-trader" aria-pressed="false">Trader</button>
+      <div id="role-error" class="error-message visually-hidden" role="alert">Please select a role.</div>
     </div>
+
+    <!-- Login form -->
+    <form id="login-form" action="/login" method="POST" novalidate>
+      <input type="hidden" name="role" id="role-hidden" />
+      <div class="mb-3">
+        <label for="identifier" class="form-label" placeholder="enter valid email or mobile number">Email or Mobile Number</label>
+        <input type="text" name="identifier" id="identifier" class="form-control" autocomplete="email" />
+        <div id="identifier-error" class="error-message visually-hidden">Please enter a valid email or mobile number.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label" placeholder="enter valid password">Password</label>
+        <div class="input-group">
+          <input type="password" name="password" id="password" class="form-control" autocomplete="current-password" minlength="6" />
+          <span class="input-group-text" id="toggle-password" title="Show / Hide password" role="button" aria-pressed="false">
+            <i class="fa-solid fa-eye-slash" id="password-icon" aria-hidden="true"></i>
+          </span>
+        </div>
+        <div id="password-error" class="error-message visually-hidden">enter valid password.</div>
+      </div>
+
+      <button type="submit" class="btn btn-success w-100" id="login-btn">Login</button>
+    </form>
+
+    <div class="text-center mt-3">
+      <button type="button" class="btn btn-link p-0" id="forgot-password-btn" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</button>
+    </div>
+
+    <p class="text-center mt-3 small">Don't have an account? <a href="/register">Register</a></p>
   </div>
 
-  <!-- Forgot Password Modal -->
-  <div
-    class="modal fade"
-    id="forgotPasswordModal"
-    tabindex="-1"
-    aria-labelledby="forgotPasswordModalLabel"
-    aria-hidden="true"
-  >
+  <!-- Forgot Password Modal with full 3-step flow -->
+  <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="forgot-password-form" novalidate>
           <div class="modal-header">
-            <h5 class="modal-title" id="forgotPasswordModalLabel">Forgot Password</h5>
-            <button
-              type="button"
-              class="btn-close"
-              aria-label="Close"
-              onclick="closeForgotPasswordModal()"
-            ></button>
+            <h5 class="modal-title">Forgot Password</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
+
           <div class="modal-body">
-            <!-- Step 1: Enter Email -->
-            <div id="fp-step-email">
-              <label for="fp-email" class="form-label">Enter your registered email</label>
-              <input
-                type="email"
-                id="fp-email"
-                class="form-control"
-                required
-                aria-describedby="fp-email-error"
-                aria-invalid="false"
-                autocomplete="email"
-              />
-              <div id="fp-email-error" class="error-message visually-hidden">
-                Please enter a valid email address.
+            <!-- Step 1 -->
+            <div id="fp-step-1">
+              <label class="form-label">Choose how to receive OTP</label>
+              <div class="mb-2">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="fp-method" id="fp-method-email" value="email" checked>
+                  <label class="form-check-label" for="fp-method-email">Email</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="fp-method" id="fp-method-phone" value="phone">
+                  <label class="form-check-label" for="fp-method-phone">Phone</label>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="fp-identifier" class="form-label">Enter your registered email or mobile number</label>
+                <input type="text" id="fp-identifier" class="form-control" autocomplete="email" />
+                <div id="fp-identifier-error" class="error-message visually-hidden">Please enter a valid email or mobile number.</div>
               </div>
             </div>
 
-            <!-- Step 2: Enter OTP -->
-            <div id="fp-step-otp" class="d-none">
-              <label for="fp-otp" class="form-label">Enter OTP sent to your email</label>
-              <input
-                type="text"
-                id="fp-otp"
-                class="form-control"
-                required
-                maxlength="6"
-                aria-describedby="fp-otp-error"
-                aria-invalid="false"
-                autocomplete="one-time-code"
-              />
-              <div id="fp-otp-error" class="error-message visually-hidden">
-                Please enter the 6-digit OTP.
+            <!-- Step 2 -->
+            <div id="fp-step-2" class="d-none">
+              <div class="mb-3">
+                <label for="fp-otp" id="fp-otp-label" class="form-label">Enter OTP</label>
+                <input type="text" id="fp-otp" class="form-control" maxlength="6" autocomplete="one-time-code" />
+                <div id="fp-otp-error" class="error-message visually-hidden">Please enter the 6-digit OTP.</div>
               </div>
-              <div class="mt-2">
-                <button type="button" class="btn btn-link p-0" onclick="resendOTP()" id="resend-otp-btn">
-                  Resend OTP
-                </button>
-                <span id="resend-otp-timer" class="text-muted ms-2"></span>
+              <div class="d-flex align-items-center gap-2">
+                <button type="button" id="resend-otp-btn" class="btn btn-link p-0" aria-disabled="true">Resend OTP</button>
+                <span id="resend-otp-timer" class="text-muted small"></span>
               </div>
             </div>
 
-            <!-- Step 3: Set New Password -->
-            <div id="fp-step-new-password" class="d-none">
-              <label for="fp-new-password" class="form-label">Set New Password</label>
-              <input
-                type="password"
-                id="fp-new-password"
-                class="form-control"
-                required
-                minlength="6"
-                aria-describedby="fp-new-password-error"
-                aria-invalid="false"
-                autocomplete="new-password"
-              />
-              <span
-                class="password-toggle-icon"
-                role="button"
-                tabindex="0"
-                aria-label="Toggle new password visibility"
-                onclick="toggleNewPasswordVisibility()"
-                onkeydown="if(event.key==='Enter' || event.key===' ') toggleNewPasswordVisibility()"
-              >
-                👁️
-              </span>
-              <div id="fp-new-password-error" class="error-message visually-hidden">
-                Password must be at least 6 characters.
+            <!-- Step 3 -->
+            <div id="fp-step-3" class="d-none">
+              <div class="mb-3">
+                <label for="fp-new-password" class="form-label">New Password</label>
+                <div class="input-group">
+                  <input type="password" id="fp-new-password" class="form-control" minlength="6" autocomplete="new-password" />
+                  <span class="input-group-text password-toggle-btn" data-target="fp-new-password" title="Show / Hide" role="button">
+                    <i class="fa-solid fa-eye-slash"></i>
+                  </span>
+                </div>
+                <div id="fp-new-password-error" class="error-message visually-hidden">Password must be at least 6 characters.</div>
+                <div class="form-text small">Strong password: include uppercase, number & symbol (optional).</div>
               </div>
-              <label for="fp-confirm-password" class="form-label mt-3">Confirm New Password</label>
-              <input
-                type="password"
-                id="fp-confirm-password"
-                class="form-control"
-                required
-                minlength="6"
-                aria-describedby="fp-confirm-password-error"
-                aria-invalid="false"
-                autocomplete="new-password"
-              />
-              <div id="fp-confirm-password-error" class="error-message visually-hidden">
-                Passwords do not match.
+
+              <div class="mb-3">
+                <label for="fp-confirm-password" class="form-label">Confirm New Password</label>
+                <div class="input-group">
+                  <input type="password" id="fp-confirm-password" class="form-control" minlength="6" autocomplete="new-password" />
+                  <span class="input-group-text password-toggle-btn" data-target="fp-confirm-password" title="Show / Hide" role="button">
+                    <i class="fa-solid fa-eye-slash"></i>
+                  </span>
+                </div>
+                <div id="fp-confirm-password-error" class="error-message visually-hidden">Passwords do not match.</div>
               </div>
             </div>
           </div>
+
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              onclick="closeForgotPasswordModal()"
-              id="fp-cancel-btn"
-            >
-              Cancel
-            </button>
-            <button type="submit" class="btn btn-success" id="fp-next-btn">
-              Next
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="fp-cancel-btn">Cancel</button>
+            <button type="submit" class="btn btn-success" id="fp-next-btn">Next</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <script src="assets/app.js"></script>
+  <!-- Toast container -->
+  <div class="toast-container-custom" id="toast-container"></div>
+
+  <!-- Bootstrap JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    // Role selection with ARIA and keyboard support
+    /*******************************
+     * Configuration: mockMode
+     * - mockMode = true: simulate backend (works offline)
+     * - mockMode = false: real fetch calls to endpoints (placeholders present)
+     *******************************/
+    const mockMode = false; // set to false when integrating real backend
+
+    /***********************
+     * Toast helper
+     ***********************/
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'custom-toast' + (type === 'error' ? ' error' : '');
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      el.textContent = message;
+      container.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('show'));
+      setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 240);
+      }, 3000);
+    }
+
+    /*******************************
+     * Role selection
+     *******************************/
     let selectedRole = null;
+    const roleFarmer = document.getElementById('role-farmer');
+    const roleTrader = document.getElementById('role-trader');
+    const roleError = document.getElementById('role-error');
 
     function setRole(role) {
       selectedRole = role;
-      const farmerButton = document.getElementById("role-farmer");
-      const traderButton = document.getElementById("role-trader");
-      const roleError = document.getElementById("role-error");
-
-      if (role === "farmer") {
-        farmerButton.classList.add("selected");
-        farmerButton.setAttribute("aria-pressed", "true");
-        traderButton.classList.remove("selected");
-        traderButton.setAttribute("aria-pressed", "false");
-      } else if (role === "trader") {
-        traderButton.classList.add("selected");
-        traderButton.setAttribute("aria-pressed", "true");
-        farmerButton.classList.remove("selected");
-        farmerButton.setAttribute("aria-pressed", "false");
-      }
-      roleError.classList.add("visually-hidden");
+      roleFarmer.classList.toggle('selected', role === 'farmer');
+      roleTrader.classList.toggle('selected', role === 'trader');
+      roleFarmer.setAttribute('aria-pressed', role === 'farmer');
+      roleTrader.setAttribute('aria-pressed', role === 'trader');
+      roleError.classList.add('visually-hidden');
+      document.getElementById('role-hidden').value = role;
     }
 
-    // Password visibility toggle for login form
-    function togglePasswordVisibility() {
-      const passwordInput = document.getElementById("password");
-      if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-      } else {
-        passwordInput.type = "password";
-      }
+    roleFarmer.addEventListener('click', () => setRole('farmer'));
+    roleTrader.addEventListener('click', () => setRole('trader'));
+    // keyboard support
+    [roleFarmer, roleTrader].forEach(btn => {
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+      });
+    });
+
+    /*******************************
+     * Inline eye toggle (login)
+     *******************************/
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password');
+    const passwordIcon = document.getElementById('password-icon');
+
+    togglePassword.addEventListener('click', () => {
+      const isPwd = passwordInput.type === 'password';
+      passwordInput.type = isPwd ? 'text' : 'password';
+      passwordIcon.classList.toggle('fa-eye');
+      passwordIcon.classList.toggle('fa-eye-slash');
+      togglePassword.setAttribute('aria-pressed', String(!isPwd));
+    });
+
+    // also allow toggle by pressing Enter/Space when focused on icon
+    togglePassword.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePassword.click(); }
+    });
+
+    /*******************************
+     * Login form validation & submit
+     *******************************/
+    const loginForm = document.getElementById('login-form');
+
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).toLowerCase());
+    }
+    function validateMobile(mobile) {
+      return /^[6-9]\d{9}$/.test(String(mobile));
     }
 
-    // Password visibility toggle for forgot password new password
-    function toggleNewPasswordVisibility() {
-      const newPasswordInput = document.getElementById("fp-new-password");
-      if (newPasswordInput.type === "password") {
-        newPasswordInput.type = "text";
-      } else {
-        newPasswordInput.type = "password";
-      }
+    function clearLoginErrors() {
+      roleError.classList.add('visually-hidden');
+      document.getElementById('identifier-error').classList.add('visually-hidden');
+      document.getElementById('password-error').classList.add('visually-hidden');
     }
 
-    // Login form validation and submission
-    const loginForm = document.getElementById("login-form");
-    loginForm.addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      // Clear previous errors
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
       clearLoginErrors();
 
       let valid = true;
+      const idVal = document.getElementById('identifier').value.trim();
+      const pwdVal = passwordInput.value;
 
-      // Validate role selection
       if (!selectedRole) {
-        document.getElementById("role-error").classList.remove("visually-hidden");
+        roleError.classList.remove('visually-hidden');
         valid = false;
       }
 
-      // Validate username/email (basic check: non-empty and if contains '@' then validate email format)
-      const usernameInput = document.getElementById("username");
-      const usernameValue = usernameInput.value.trim();
-      if (!usernameValue) {
-        showError("username");
-        valid = false;
-      } else if (usernameValue.includes("@") && !validateEmail(usernameValue)) {
-        showError("username");
+      if (!idVal || (idVal.includes('@') ? !validateEmail(idVal) : !validateMobile(idVal))) {
+        document.getElementById('identifier-error').classList.remove('visually-hidden');
         valid = false;
       }
 
-      // Validate password length
-      const passwordInput = document.getElementById("password");
-      if (passwordInput.value.length < 6) {
-        showError("password");
+      if (!pwdVal || pwdVal.length < 6) {
+        document.getElementById('password-error').classList.remove('visually-hidden');
         valid = false;
       }
 
       if (!valid) return;
 
-      // Placeholder login logic
-      alert(`Logging in as ${selectedRole}`);
-
-      // Here you would add your actual login logic (e.g., API call)
+      // Replace this with actual backend login if available
+      showToast('Login validated (demo).', 'success');
+      // loginForm.submit(); // uncomment to perform regular POST
     });
 
-    function clearLoginErrors() {
-      document.getElementById("role-error").classList.add("visually-hidden");
-      hideError("username");
-      hideError("password");
-    }
+    /**************************************
+     * Forgot Password Modal & Flow
+     **************************************/
+    const forgotModalEl = document.getElementById('forgotPasswordModal');
+    const forgotModal = new bootstrap.Modal(forgotModalEl, { backdrop: 'static', keyboard: false });
+    const forgotBtn = document.getElementById('forgot-password-btn');
 
-    function showError(field) {
-      const errorEl = document.getElementById(field + "-error");
-      const inputEl = document.getElementById(field);
-      if (errorEl && inputEl) {
-        errorEl.classList.remove("visually-hidden");
-        inputEl.setAttribute("aria-invalid", "true");
-      }
-    }
+    const forgotForm = document.getElementById('forgot-password-form');
+    const fpStep1 = document.getElementById('fp-step-1');
+    const fpStep2 = document.getElementById('fp-step-2');
+    const fpStep3 = document.getElementById('fp-step-3');
+    const fpNextBtn = document.getElementById('fp-next-btn');
 
-    function hideError(field) {
-      const errorEl = document.getElementById(field + "-error");
-      const inputEl = document.getElementById(field);
-      if (errorEl && inputEl) {
-        errorEl.classList.add("visually-hidden");
-        inputEl.setAttribute("aria-invalid", "false");
-      }
-    }
+    const fpIdentifier = document.getElementById('fp-identifier');
+    const fpOtpInput = document.getElementById('fp-otp');
+    const resendBtn = document.getElementById('resend-otp-btn');
+    const resendTimerText = document.getElementById('resend-otp-timer');
 
-    function validateEmail(email) {
-      // Simple email regex
-      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return re.test(email.toLowerCase());
-    }
+    const passwordToggleButtons = document.querySelectorAll('.password-toggle-btn');
 
-    // Forgot Password Modal Logic
-    const forgotPasswordModal = new bootstrap.Modal(document.getElementById("forgotPasswordModal"));
-    const forgotPasswordForm = document.getElementById("forgot-password-form");
-    const fpStepEmail = document.getElementById("fp-step-email");
-    const fpStepOtp = document.getElementById("fp-step-otp");
-    const fpStepNewPassword = document.getElementById("fp-step-new-password");
-    const fpNextBtn = document.getElementById("fp-next-btn");
-    const fpCancelBtn = document.getElementById("fp-cancel-btn");
-    const forgotPasswordBtn = document.getElementById("forgot-password-btn");
+    // toggle for modal password fields
+    passwordToggleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const icon = btn.querySelector('i');
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+      });
+    });
 
+    // Steps state
     let currentStep = 1;
-    let otpSent = false;
-    let resendTimer = null;
-    let resendCountdown = 30;
+    let resendInterval = null;
+    let resendSeconds = 0;
+    let selectedMethod = 'email'; // email or phone
 
-    function openForgotPasswordModal() {
-      forgotPasswordModal.show();
-      forgotPasswordBtn.setAttribute("aria-expanded", "true");
-      resetForgotPasswordForm();
+    // method radio change
+    document.querySelectorAll('input[name="fp-method"]').forEach(r => {
+      r.addEventListener('change', (e) => {
+        selectedMethod = e.target.value;
+        updateFpOtpLabel();
+      });
+    });
+
+    function updateFpOtpLabel() {
+      const label = document.getElementById('fp-otp-label');
+      if (label) label.textContent = `Enter OTP sent to your ${selectedMethod}`;
     }
+    updateFpOtpLabel();
 
-    function closeForgotPasswordModal() {
-      forgotPasswordModal.hide();
-      forgotPasswordBtn.setAttribute("aria-expanded", "false");
-      resetForgotPasswordForm();
-    }
+    // Reset and open modal
+    forgotBtn.addEventListener('click', () => {
+      resetForgotForm();
+      forgotModal.show();
+    });
 
-    function resetForgotPasswordForm() {
+    forgotModalEl.addEventListener('hidden.bs.modal', () => {
+      resetForgotForm();
+    });
+
+    function resetForgotForm() {
       currentStep = 1;
-      otpSent = false;
-      resendCountdown = 30;
-      clearInterval(resendTimer);
-      document.getElementById("resend-otp-timer").textContent = "";
-      fpStepEmail.classList.remove("d-none");
-      fpStepOtp.classList.add("d-none");
-      fpStepNewPassword.classList.add("d-none");
-      fpNextBtn.textContent = "Next";
-
-      // Clear inputs and errors
-      forgotPasswordForm.reset();
+      clearInterval(resendInterval);
+      resendInterval = null;
+      resendSeconds = 0;
+      fpNextBtn.disabled = false;
+      fpNextBtn.textContent = 'Next';
+      fpStep1.classList.remove('d-none');
+      fpStep2.classList.add('d-none');
+      fpStep3.classList.add('d-none');
+      resendBtn.disabled = true;
+      resendTimerText.textContent = '';
+      forgotForm.reset();
       clearFpErrors();
     }
 
     function clearFpErrors() {
-      ["fp-email", "fp-otp", "fp-new-password", "fp-confirm-password"].forEach((id) => {
+      ['fp-identifier','fp-otp','fp-new-password','fp-confirm-password'].forEach(id => {
+        const err = document.getElementById(id + '-error');
+        if (err) err.classList.add('visually-hidden');
         const input = document.getElementById(id);
-        const error = document.getElementById(id + "-error");
-        if (input && error) {
-          input.setAttribute("aria-invalid", "false");
-          error.classList.add("visually-hidden");
-        }
+        if (input) input.setAttribute('aria-invalid', 'false');
       });
     }
 
-    forgotPasswordForm.addEventListener("submit", function (event) {
-      event.preventDefault();
+    // OTP realtime enable/disable
+    fpOtpInput.addEventListener('input', () => {
+      const val = fpOtpInput.value.trim();
+      fpNextBtn.disabled = !/^\d{6}$/.test(val);
+    });
+
+    forgotForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
       clearFpErrors();
 
       if (currentStep === 1) {
-        // Validate email
-        const emailInput = document.getElementById("fp-email");
-        const emailValue = emailInput.value.trim();
-        if (!emailValue || !validateEmail(emailValue)) {
-          showFpError("fp-email");
+        const val = fpIdentifier.value.trim();
+        if (!val || (selectedMethod === 'email' ? !validateEmail(val) : !validateMobile(val))) {
+          document.getElementById('fp-identifier-error').classList.remove('visually-hidden');
           return;
         }
-        // Simulate sending OTP
-        sendOTP(emailValue);
+        await sendOTP({ identifier: val, method: selectedMethod, resend: false });
       } else if (currentStep === 2) {
-        // Validate OTP
-        const otpInput = document.getElementById("fp-otp");
-        const otpValue = otpInput.value.trim();
-        if (!otpValue || otpValue.length !== 6 || !/^\d{6}$/.test(otpValue)) {
-          showFpError("fp-otp");
+        const otp = fpOtpInput.value.trim();
+        if (!/^\d{6}$/.test(otp)) {
+          document.getElementById('fp-otp-error').classList.remove('visually-hidden');
           return;
         }
-        // Simulate OTP verification success
-        verifyOTP(otpValue);
+        await verifyOTP({ otp });
       } else if (currentStep === 3) {
-        // Validate new password and confirm password
-        const newPasswordInput = document.getElementById("fp-new-password");
-        const confirmPasswordInput = document.getElementById("fp-confirm-password");
-        const newPassword = newPasswordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
-
-        let valid = true;
-        if (newPassword.length < 6) {
-          showFpError("fp-new-password");
-          valid = false;
+        const newPwd = document.getElementById('fp-new-password').value;
+        const conf = document.getElementById('fp-confirm-password').value;
+        if (!validatePasswordRules(newPwd)) {
+          document.getElementById('fp-new-password-error').classList.remove('visually-hidden');
+          return;
         }
-        if (confirmPassword !== newPassword || confirmPassword.length < 6) {
-          showFpError("fp-confirm-password");
-          valid = false;
+        if (newPwd !== conf) {
+          document.getElementById('fp-confirm-password-error').classList.remove('visually-hidden');
+          return;
         }
-        if (!valid) return;
-
-        // Simulate password reset success
-        resetPassword(newPassword);
+        await resetPassword({ new_password: newPwd });
       }
     });
 
-    function showFpError(fieldId) {
-      const input = document.getElementById(fieldId);
-      const error = document.getElementById(fieldId + "-error");
-      if (input && error) {
-        input.setAttribute("aria-invalid", "true");
-        error.classList.remove("visually-hidden");
+    // Resend OTP button
+    resendBtn.addEventListener('click', async () => {
+      if (resendSeconds > 0) return;
+      const val = fpIdentifier.value.trim();
+      if (!val) { document.getElementById('fp-identifier-error').classList.remove('visually-hidden'); return; }
+      await sendOTP({ identifier: val, method: selectedMethod, resend: true });
+    });
+
+    // resend timer
+    function startResendTimer(seconds = 30) {
+      clearInterval(resendInterval);
+      resendSeconds = seconds;
+      resendBtn.disabled = true;
+      resendTimerText.textContent = ` (${resendSeconds}s)`;
+      resendInterval = setInterval(() => {
+        resendSeconds--;
+        resendTimerText.textContent = resendSeconds > 0 ? ` (${resendSeconds}s)` : '';
+        if (resendSeconds <= 0) {
+          clearInterval(resendInterval);
+          resendBtn.disabled = false;
+          resendTimerText.textContent = '';
+        }
+      }, 1000);
+    }
+
+    /*******************************
+     * Password rules
+     *******************************/
+    function validatePasswordRules(pwd) {
+      if (!pwd || pwd.length < 8) return false;
+      // optional stricter rules:
+      // return /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(pwd);
+      return true;
+    }
+
+    /*******************************
+     * Network functions (or mocks)
+     *******************************/
+    async function sendOTP({ identifier, method, resend=false }) {
+      // UI: show loading state on button
+      setFpButtonLoading(true, resend ? 'Resending...' : 'Sending...');
+      try {
+        if (mockMode) {
+          // simulate server latency
+          await new Promise(r => setTimeout(r, 700));
+          showToast(resend ? 'OTP resent (demo)' : 'OTP sent (demo)', 'success');
+          // move to step 2 if not resend
+          if (!resend) {
+            currentStep = 2;
+            fpStep1.classList.add('d-none');
+            fpStep2.classList.remove('d-none');
+            fpStep3.classList.add('d-none');
+            fpNextBtn.textContent = 'Verify OTP';
+            fpNextBtn.disabled = true;
+            startResendTimer(30);
+          } else {
+            startResendTimer(30);
+          }
+        } else {
+          // Real API call: replace URL with your endpoint
+          const res = await fetch('/api/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier, method })
+          });
+          const data = await safeJson(res);
+          if (res.ok && data && data.success) {
+            showToast(data.message || (resend ? 'OTP resent' : 'OTP sent'), 'success');
+            if (!resend) {
+              currentStep = 2;
+              fpStep1.classList.add('d-none');
+              fpStep2.classList.remove('d-none');
+              fpStep3.classList.add('d-none');
+              fpNextBtn.textContent = 'Verify OTP';
+              fpNextBtn.disabled = true;
+              startResendTimer(30);
+            } else {
+              startResendTimer(30);
+            }
+          } else {
+            showToast((data && data.message) || 'Failed to send OTP', 'error');
+            document.getElementById('fp-identifier-error').classList.remove('visually-hidden');
+          }
+        }
+      } catch (err) {
+        console.error('sendOTP error', err);
+        showToast('Failed to send OTP. Try again later.', 'error');
+      } finally {
+        setFpButtonLoading(false);
       }
     }
 
-    function sendOTP(email) {
-      // Simulate sending OTP (replace with real API call)
-      otpSent = true;
-      currentStep = 2;
-      fpStepEmail.classList.add("d-none");
-      fpStepOtp.classList.remove("d-none");
-      fpStepNewPassword.classList.add("d-none");
-      fpNextBtn.textContent = "Verify OTP";
-
-      startResendTimer();
-      alert(`OTP sent to ${email} (simulated)`); // For demo only
+    async function verifyOTP({ otp }) {
+      setFpButtonLoading(true, 'Verifying...');
+      try {
+        if (mockMode) {
+          await new Promise(r => setTimeout(r, 600));
+          // mock: accept any 6-digit
+          showToast('OTP verified (demo)', 'success');
+          currentStep = 3;
+          fpStep1.classList.add('d-none');
+          fpStep2.classList.add('d-none');
+          fpStep3.classList.remove('d-none');
+          fpNextBtn.textContent = 'Reset Password';
+          fpNextBtn.disabled = false;
+        } else {
+          const res = await fetch('/api/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ otp })
+          });
+          const data = await safeJson(res);
+          if (res.ok && data && data.success) {
+            showToast(data.message || 'OTP verified', 'success');
+            currentStep = 3;
+            fpStep1.classList.add('d-none');
+            fpStep2.classList.add('d-none');
+            fpStep3.classList.remove('d-none');
+            fpNextBtn.textContent = 'Reset Password';
+            fpNextBtn.disabled = false;
+          } else {
+            showToast((data && data.message) || 'Invalid OTP', 'error');
+            document.getElementById('fp-otp-error').classList.remove('visually-hidden');
+          }
+        }
+      } catch (err) {
+        console.error('verifyOTP error', err);
+        showToast('Failed to verify OTP. Try again later.', 'error');
+      } finally {
+        setFpButtonLoading(false);
+      }
     }
 
-    function verifyOTP(otp) {
-      // Simulate OTP verification (replace with real API call)
-      // For demo, accept any 6-digit OTP
-      currentStep = 3;
-      fpStepEmail.classList.add("d-none");
-      fpStepOtp.classList.add("d-none");
-      fpStepNewPassword.classList.remove("d-none");
-      fpNextBtn.textContent = "Reset Password";
+    async function resetPassword({ new_password }) {
+      setFpButtonLoading(true, 'Resetting...');
+      try {
+        if (mockMode) {
+          await new Promise(r => setTimeout(r, 600));
+          showToast('Password reset successful (demo)', 'success');
+          forgotModal.hide();
+          resetForgotForm();
+        } else {
+          const res = await fetch('/api/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_password })
+          });
+          const data = await safeJson(res);
+          if (res.ok && data && data.success) {
+            showToast(data.message || 'Password reset successful', 'success');
+            forgotModal.hide();
+            resetForgotForm();
+          } else {
+            showToast((data && data.message) || 'Failed to reset password', 'error');
+          }
+        }
+      } catch (err) {
+        console.error('resetPassword error', err);
+        showToast('Failed to reset password. Try again later.', 'error');
+      } finally {
+        setFpButtonLoading(false);
+      }
     }
+
+    async function safeJson(res) {
+      try { return await res.json(); } catch (e) { return null; }
+    }
+
+    // UI loading state for modal action button
+    function setFpButtonLoading(isLoading, text = '') {
+      if (!fpNextBtn) return;
+      if (isLoading) {
+        fpNextBtn.disabled = true;
+        fpNextBtn.dataset.orig = fpNextBtn.textContent;
+        fpNextBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ' + text;
+      } else {
+        fpNextBtn.disabled = false;
+        fpNextBtn.textContent = fpNextBtn.dataset.orig || 'Next';
+      }
+    }
+
+    /***************************************
+     * Additional accessibility & helpers
+     ***************************************/
+    // Allow pressing Enter on resend button
+    resendBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); resendBtn.click(); }
+    });
+
+    // Make sure fpNextBtn is initially enabled only for step 1
+    fpNextBtn.disabled = false;
+
+    /***************************************
+     * Optional: allow pressing Enter in OTP to submit
+     ***************************************/
+    fpOtpInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && /^\d{6}$/.test(fpOtpInput.value.trim())) {
+        fpNextBtn.click();
+      }
+    });
+
+    // Expose for debugging in console if needed:
+    window._login_helpers = {
+      sendOTP, verifyOTP, resetPassword, startResendTimer, mockMode
+    };
+
+    // Initialize: ensure modal is reset
+    resetForgotForm();
+  </script>
+</body>
+</html>
