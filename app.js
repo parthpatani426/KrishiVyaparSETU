@@ -5,6 +5,8 @@ function generateCaptcha() {
   captcha.b = Math.floor(Math.random() * 10) + 1;
   const q = document.getElementById("captchaQuestion");
   if (q) q.textContent = `${captcha.a} + ${captcha.b} = ?`;
+}
+
 function validateCaptcha() {
   const ansField = document.getElementById("captchaAnswer");
   if (!ansField) return true; // no captcha present
@@ -72,14 +74,7 @@ function toggleRoleFields(role) {
 
 // ---- Camera Authentication ----
 let cameraStream = null;
-const video = document.getElementById('cameraFeed');
-const canvas = document.getElementById('cameraCanvas');
-const captureImageButton = document.getElementById('captureImageButton');
-const startCameraButton = document.getElementById('startCameraButton');
-const capturedImagePreview = document.getElementById('capturedImagePreview');
-const capturedImageContainer = document.getElementById('capturedImageContainer');
-const capturedImageDataInput = document.getElementById('capturedImageData');
-const cameraAuthFeedback = document.getElementById('cameraAuthFeedback');
+let video, canvas, captureImageButton, startCameraButton, capturedImagePreview, capturedImageContainer, capturedImageDataInput, cameraAuthFeedback;
 
 async function startCamera() {
   try {
@@ -89,14 +84,26 @@ async function startCamera() {
     video.play();
     startCameraButton.textContent = 'Camera On';
     startCameraButton.disabled = true;
-    captureImageButton.disabled = false;
+    // Disable capture button until video metadata is loaded
+    captureImageButton.disabled = true;
     cameraAuthFeedback.style.display = 'none'; // Hide feedback on success
+
+    // Wait for video metadata to load before enabling capture
+    // Remove any existing listener to prevent duplicates
+    video.removeEventListener('loadedmetadata', onVideoLoaded);
+    video.addEventListener('loadedmetadata', onVideoLoaded);
   } catch (err) {
     console.error("Error accessing camera: ", err);
     alert("Could not access camera. Please ensure you have a camera and have granted permissions.");
     cameraAuthFeedback.textContent = "Camera access denied or not available.";
     cameraAuthFeedback.style.display = 'block';
   }
+}
+
+function onVideoLoaded() {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  captureImageButton.disabled = false;
 }
 
 function captureImage() {
@@ -106,8 +113,7 @@ function captureImage() {
   }
 
   const context = canvas.getContext('2d');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  // Canvas dimensions are already set in loadedmetadata
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   const imageDataURL = canvas.toDataURL('image/png');
@@ -116,13 +122,18 @@ function captureImage() {
   capturedImageContainer.style.display = 'block';
   cameraAuthFeedback.style.display = 'none'; // Hide feedback on successful capture
 
-  // Stop camera after capturing
+  // Stop camera after capturing and show recapture button
   if (cameraStream) {
     cameraStream.getTracks().forEach(track => track.stop());
     video.srcObject = null;
     startCameraButton.textContent = 'Start Camera';
     startCameraButton.disabled = false;
     captureImageButton.disabled = true;
+    // Show recapture button
+    const recaptureImageButton = document.getElementById('recaptureImageButton');
+    if (recaptureImageButton) {
+      recaptureImageButton.style.display = 'block';
+    }
   }
 }
 
@@ -248,6 +259,16 @@ async function verifyOtp() {
 
 // ---- Form init and submission ----
 function initRegistrationEnhancements({ recaptchaSiteKey = "" } = {}) {
+  // Initialize camera elements
+  video = document.getElementById('cameraFeed');
+  canvas = document.getElementById('cameraCanvas');
+  captureImageButton = document.getElementById('captureImageButton');
+  startCameraButton = document.getElementById('startCameraButton');
+  capturedImagePreview = document.getElementById('capturedImagePreview');
+  capturedImageContainer = document.getElementById('capturedImageContainer');
+  capturedImageDataInput = document.getElementById('capturedImageData');
+  cameraAuthFeedback = document.getElementById('cameraAuthFeedback');
+
   // Init captcha
   generateCaptcha();
   // Attach event listener to refresh button for math captcha
@@ -270,6 +291,20 @@ function initRegistrationEnhancements({ recaptchaSiteKey = "" } = {}) {
   }
   if (captureImageButton) {
     captureImageButton.addEventListener('click', captureImage);
+  }
+  const recaptureImageButton = document.getElementById('recaptureImageButton');
+  if (recaptureImageButton) {
+    recaptureImageButton.addEventListener('click', () => {
+      // Hide recapture button, show capture button, hide preview
+      recaptureImageButton.style.display = 'none';
+      captureImageButton.disabled = false;
+      capturedImageContainer.style.display = 'none';
+      capturedImageDataInput.value = '';
+      // Restart camera if needed
+      if (!cameraStream) {
+        startCamera();
+      }
+    });
   }
 
   // OTP button event listeners
@@ -388,30 +423,42 @@ function initRegistrationEnhancements({ recaptchaSiteKey = "" } = {}) {
       // Backend must handle decryption/validation with user consent.
 
       event.preventDefault();
-      // Simulate success
-      alert("Registration submitted successfully (demo). Replace with backend API.");
-      // In a real application, you would collect all form data and send it to your backend here:
-      
-      /*const formData = new FormData(form);
-      fetch('/api/register', {
-          method: 'POST',
-          body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-          if (data.success) {
-              alert("Registration successful!");
-              window.location.href = "login.html";
-          } else {
-              alert("Registration failed: " + data.message);
-          }
-      })
-      .catch(error => {
-          console.error('Error:', error);
-          alert("An error occurred during registration.");
-      });*/
-      
-       Optionallyredirect:
+      // Collect form data and save to localStorage for demo
+      const formData = new FormData(form);
+      const profile = {
+        role: formData.get('role'),
+        name: formData.get('fullName'),
+        mobile: formData.get('mobile'),
+        email: formData.get('email'),
+        location: `${formData.get('village')}, ${formData.get('district')}, ${formData.get('state')} ${formData.get('pincode')}`,
+        profilePic: formData.get('capturedImageData'), // Captured image as profile pic
+        // Add role-specific data
+        ...(formData.get('role') === 'farmer' ? {
+          primaryCrop: formData.get('primaryCrop'),
+          farmSize: formData.get('farmSize')
+        } : {
+          businessName: formData.get('businessName'),
+          gstin: formData.get('gstin')
+        })
+      };
+
+      // Save to localStorage (simulate user registration)
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      users.push({
+        role: profile.role,
+        fullName: profile.name,
+        mobile: profile.mobile,
+        email: profile.email,
+        location: profile.location,
+        profilePic: profile.profilePic,
+        ...profile
+      });
+      localStorage.setItem("users", JSON.stringify(users));
+
+      // Also save current user profile for dashboard
+      localStorage.setItem("currentUserProfile", JSON.stringify(profile));
+
+      alert("Registration successful! Your captured image is set as your profile picture.");
       window.location.href = "login.html";
     })
   }
@@ -473,5 +520,4 @@ function changeBackground(role) {
   } else {
     card.style.backgroundImage = "none";
   }
-}
 }
