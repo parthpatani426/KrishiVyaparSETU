@@ -3,64 +3,264 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FarmTrade Connect - Home</title>
+  <title>KrishiVyaparSETU - Home</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-   /* body {
-     background: url("assets/images/bg.jpg") no-repeat center center fixed;
-      background-size: cover;
-    }*/
+    /* === Base Styles === */
+    body {
+      background: rgba(8, 0, 0, 0.992);
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+    }
+
+    /* === Intro Video === */
+    #introVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 1.5s ease-in-out;
+    }
+
+    /* === Video Overlay === */
+    #videoOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      color: #fff;
+      text-align: center;
+    }
+
+    .overlay-logo {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 4px solid #28a745;
+      object-fit: cover;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(40, 167, 69, 0.8);
+    }
+
+    .overlay-text {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+
+
+    /* === Main Content (Hidden Initially) === */
+    #mainContent {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      opacity: 0;
+      transition: opacity 2s ease-in-out;
+      background: url('/static/assets/images/bg.jpg') no-repeat center center/cover;
+    }
+
+    /* === Welcome Card === */
     .welcome-card {
       max-width: 500px;
       margin: auto;
-      margin-top: 120px;
-      padding: 30px;
-      background: rgba(139, 139, 139, 0.68); /* ✅ 75% opacity */
-      border-radius: 15px;
+      padding: 40px 30px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 20px;
       text-align: center;
-      box-shadow: 0px 4px 20px rgba(0,0,0,0.25);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform 0.8s ease, opacity 0.8s ease;
     }
+
+    .welcome-card.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* === Logo === */
     .logo {
-      width: 120px;
-      height: 120px;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 4px solid #28a745;
       object-fit: cover;
-      border-radius: 50%; /* ✅ circular shape */
-      display: block;
-      margin: 0 auto 15px auto;
-      border: 3px solid #28a745; /* optional green border */
+      margin-bottom: 20px;
+      box-shadow: 0 0 15px rgba(40, 167, 69, 0.7);
+      opacity: 0;
+      transform: scale(0.9);
+      animation: none;
     }
-    .welcome-card p {
-      color: #f9fcfa; /* Green color for the title */
+
+    /* === Logo Animation === */
+    .logo.show {
+      animation: logoFadeBounce 1.2s ease forwards;
     }
-   video.bg-video {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* shifts center */
-  width: 80%;   /* scale video */
-  height: 1000px;
-  z-index: -1; /* behind content */
-}
+
+    @keyframes logoFadeBounce {
+      0% {
+        opacity: 0;
+        transform: scale(0.7) translateY(-20px);
+      }
+      60% {
+        opacity: 1;
+        transform: scale(1.05) translateY(0);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* === Text and Buttons === */
+    h1 {
+      color: #1d5c2f;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    p.lead {
+      color: #333;
+      font-size: 1.1rem;
+      margin-bottom: 25px;
+    }
+
+    .btn-success {
+      background: #28a745;
+      border: none;
+      font-weight: 600;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    .btn-success:hover {
+      background: #1e7a35;
+      transform: scale(1.03);
+    }
   </style>
 </head>
 <body>
-      <video autoplay muted loop class="bg-video">
-    <source src="assets/videos/Video-3.mp4" type="video/mp4">
+
+  <!-- 🌾 Intro Video -->
+  <video id="introVideo" autoplay muted preload="auto">
+    <source src="/static/assets/videos/start.mp4" type="video/mp4">
   </video>
-  <div class="container">
-    <div class="welcome-card">
-      <!-- ✅ Circular Logo -->
-      <img src="assets/images/logo.png" alt="FarmTrade Logo" class="logo">
 
-      <h1 class="mb-3">Welcome to FarmTrade Connect</h1>
-      <p class="lead">Connecting Farmers and Traders directly for better opportunities 🚜</p>
+  <!-- 🌾 Video Overlay -->
+  <div id="videoOverlay">
+    <img src="/static/assets/images/logo.jpg" alt="KrishiVyaparSETU Logo" class="overlay-logo">
+    <div class="overlay-text">Welcome to KrishiVyaparSETU</div>
+  </div>
 
-      <a href="login.html" class="btn btn-success w-100 mb-2">Login</a>
-      <a href="register.html" class="btn btn-success w-100">Register</a>
+  <!-- 🌾 Main Content -->
+  <div id="mainContent">
+    <div class="welcome-card" id="welcomeCard">
+      <img src="/static/assets/images/logo.jpg" alt="KrishiVyaparSETU Logo" class="logo" id="logo">
+      <h1>Welcome to KrishiVyaparSETU</h1>
+      <p class="lead">Bridging Farmers and Traders for better opportunities 🚜</p>
+      <a href="/login" class="btn btn-success w-100 mb-3">Login</a>
+      <a href="/register" class="btn btn-success w-100">Register</a>
     </div>
   </div>
 
-<script src="assets/app.js"></script>
+  <script>
+    const video = document.getElementById("introVideo");
+    const mainContent = document.getElementById("mainContent");
+    const card = document.getElementById("welcomeCard");
+    const logo = document.getElementById("logo");
+    const overlay = document.getElementById("videoOverlay");
+
+    // Function to show main content
+    function showMainContent(skipVideo = false) {
+      if (!skipVideo) {
+        video.style.opacity = "0";
+        overlay.style.display = "none";
+
+        // After fade out, show main content
+        setTimeout(() => {
+          video.style.display = "none";
+          mainContent.style.opacity = "1";
+          document.body.style.overflow = "auto";
+
+          // Fade-in card with smooth pop animation
+          setTimeout(() => {
+            card.classList.add("show");
+            logo.classList.add("show"); // trigger logo animation
+          }, 500);
+        }, 1500); // Match video fade duration
+      } else {
+        // Skip video, show main content immediately
+        video.style.display = "none";
+        overlay.style.display = "none";
+        mainContent.style.opacity = "1";
+        document.body.style.overflow = "auto";
+
+        // Fade-in card with smooth pop animation
+        setTimeout(() => {
+          card.classList.add("show");
+          logo.classList.add("show"); // trigger logo animation
+        }, 100); // Quick animation for skipped video
+      }
+    }
+
+    // Check if video has already been played in this session
+    if (sessionStorage.getItem('videoPlayed')) {
+      // Skip video and show main content directly
+      showMainContent(true);
+    } else {
+      // Force play the video to ensure it starts
+      video.load();
+      video.play().catch(function(error) {
+        console.log('Autoplay blocked, trying to play on user interaction');
+        // If autoplay fails, show a play button or skip
+        const playBtn = document.createElement('button');
+        playBtn.innerText = 'Play Intro Video';
+        playBtn.style.position = 'fixed';
+        playBtn.style.top = '50%';
+        playBtn.style.left = '50%';
+        playBtn.style.transform = 'translate(-50%, -50%)';
+        playBtn.style.zIndex = '10001';
+        playBtn.style.padding = '10px 20px';
+        playBtn.style.background = '#28a745';
+        playBtn.style.color = '#fff';
+        playBtn.style.border = 'none';
+        playBtn.style.borderRadius = '5px';
+        playBtn.onclick = function() {
+          video.play();
+          playBtn.remove();
+        };
+        document.body.appendChild(playBtn);
+      });
+
+      // When the video ends, fade out and show content
+      video.addEventListener("ended", function() {
+        sessionStorage.setItem('videoPlayed', 'true');
+        showMainContent();
+      });
+
+      // Fallback: if video doesn't play after 5 seconds, show content
+      setTimeout(function() {
+        sessionStorage.setItem('videoPlayed', 'true');
+        showMainContent();
+      }, 5000);
+    }
+  </script>
+
 </body>
 </html>
